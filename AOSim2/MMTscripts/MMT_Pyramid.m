@@ -1,13 +1,15 @@
-%%Script demonstrating the setup and operation of the LBT AO simulation
-%This is a modified version of the run_myGMT scripts by JLC in demos
+%%Script demonstrating the setup and operation of the pyramids WFS on MMT
+%Based on LBT_single_aperture, derived from run_myGMT scripts by JLC in demos
 %PMH 20100327
+%VPB 20100521
+
 clear;
 numframes=100;     %number of frames to generate
 numtrials=3;  %number of time to do simulation with same random seed
 STREHL = zeros(numframes,numtrials);
 
 for i=1:numtrials %Run complete program multiple times
-    if (i==10)  %Run each iteration with exaxt same random number seed
+    if (i==10)  %Run each iteration with exact same random number seed
         defaultStream = RandStream.getDefaultStream;
         savedState = defaultStream.State;
     else
@@ -15,19 +17,32 @@ for i=1:numtrials %Run complete program multiple times
     end
     %%Set parameters likely to be fiddled with
     
-    WFS_FPS=1000;       %running at  "WFS_FPS" Hz
+    WFS_FPS=100;       %running at  "WFS_FPS" Hz
     AO_STARTTIME=0.002; %Starting time of AO correction
-    
-    gain = 1.0;         % Fraction of error to feedback
-    SCIENCE_WAVELENGTH = AOField.KBAND;
+    UsePyramid = 1;     % 1= use pyramid sensor. 0=use SH
+    maskName = 'indpup05302010'; %load pyramid pupil mask from file
+    %maskName = 0;    
+
+    gain = 2;         % Fraction of error to feedback
+    SCIENCE_WAVELENGTH = AOField.LBAND;
     gsangle=0;           %Angle of guide star from axis in arcsec
     windfactor=1;       % for slowing wind down to check lag
     r0factor=1;         % for increasing r0 to check turbulence effects
+                        %r0 = 15cm*r0factor;
     hFOV=0.4;            %half FOV of PSF in arcsec
-    subapps=30;          %SH WFS number of subapps
+    subapps=24;          %number of subapps(pixels) across diameter of pyrWFS sensor (= Number illuminated +2)
     REBUILD=1;          %Should reconstructor be generated first?
-    ORDER = 9;
+    ORDER = 9;          
+
+    %noise stuff
+    band = 'VBAND';
+    gsmag = 6.5;
+    WFS_BANDWIDTH = .5; % um
+    useNoise = 1;       % set to 1 to implement detector noise in loop
+    display(sprintf('useNoise is: %3i',useNoise))
+    
     fprintf('maximum modes correctable is ~%3.0f \n',subapps^2/4*pi);
+    
 
    
     if(REBUILD) 
@@ -35,40 +50,45 @@ for i=1:numtrials %Run complete program multiple times
     NModes=round((ORDER*3.14159)*2+1)*ORDER;
         %This is based on the make_the_GMT_AO script in demos by JLC
         % Create aperture definitions
-        load data/PLBT_oneEye.mat
+        load data/PMMT.mat
         Seg = AOSegment;
-        Seg.name = 'LBT Primary';
-        Seg.pupils = PLBT;
+        Seg.name = 'MMT Primary';
+        Seg.pupils = PMMT;
         Seg.make;
 
         AL = AOAperture;
-        AL.name = 'LBT Left';
+        AL.name = 'MMT';
         AL.addSegment(Seg);
         DM = AODM(AL);
-        DM.name = 'LBT Hexapolar Adaptive Secondary';
-        %% Use actuators from GMT positions  
-        load GMT_672act_segment_PMH.mat;
+        DM.name = 'MMT Adaptive Secondary';
+        %% Use actuators from MMT positions  
+        load MMT_DM336_Actuators.mat;
+        %scale actuator positions to primary diameter
+        DMnorm = max(sqrt(ACT(:,1).^2+ACT(:,2).^2));
+        ACT = ACT / DMnorm * max(max(AL.BBox));
         %Add them to the DM
-        DM.addActs(GMT_Actuators)
-        %Define a radius of 10 m and 8azimuthal points as boundary
-        DM.defineBC(20,30);
+        DM.addActs(ACT)
+        %Define a radius of 10 m and 10 azimuthal points as boundary
+        DM.defineBC(10,10);
         
-        %% Build the Shack-Hartmann WFS.
-        d = 8.25;
+        %% Build the WFS.
+        d = 6.5;
         BB=AL.BBox;
         %D= mean(BB(2,:)-BB(1,:));
-        WFS = AOWFS(AL,d/subapps);
-        WFS.name = 'LBT Shack-Hartmann WFS';
+        WFS = AOWFS(AL,d/subapps,UsePyramid,maskName);
+        %WFS = AOWFS(AL,d/subapps);
+        WFS.name = 'MMT Pyramid WFS';
+        
         %% Now for some real work.  Building the RECONSTRUCTOR...
         RECON = AOReconstructor(AL,DM,WFS);
         %Set Scutoff high to make the cutoff be whatever the modes explored is.
         RECON.Scutoff=30000;
         show=true;
         RECON.zprogram(d,ORDER,show);
-        matfile = sprintf(['LBTAOdh%03.0f'],NModes);
+        matfile = sprintf(['MMTPYRAOdh%03.0f'],NModes);
         save (matfile, 'AL', 'DM', 'WFS', 'RECON', 'd') % 
     else  %Load in pre-made reconstructor
-       load binaries/LBTAOdh104
+       %load binaries/LBTAOdh104
     end
 
     %% Now Generate the Phase screens 
@@ -104,13 +124,16 @@ for i=1:numtrials %Run complete program multiple times
     ATMO.GEOMETRY = false;  %false=dynamic focus of BEACON
     GUIDE_STAR=STAR;        %Position of beacon used for AO correction
     SCIENCE_OBJECT=SC_OBJECT;    %Position of object used for image quality estimate
-
+    
+    
     %%Now Set up the field objects
     % Create the WFS and Science AOField objects...
     Fwfs = AOField(AL);
     % The Reconstructor was calibrated at a certain wavelength.
     Fwfs.lambda = RECON.lambda;  
 
+    targetStar = AOStar(gsmag);
+    
     F = AOField(AL);
     F.lambda = SCIENCE_WAVELENGTH;  % Science Wavelength
     F.FFTSize = 1024*[1 1]; 
@@ -132,7 +155,7 @@ for i=1:numtrials %Run complete program multiple times
     yang = zeros(numframes,1);
     maxStrehl = 0.3;
     CCD = 0;
-    Dap = 8.4;
+    Dap = 6.5;
     sigmafit=AOField.VBAND/SCIENCE_WAVELENGTH.*sqrt(0.2944*(RECON.Nmodes^(-sqrt(3)/2))*(Dap/r0)^(5/3));
     sigmatime=AOField.VBAND/SCIENCE_WAVELENGTH.*sqrt(0.3*(30/r0/WFS_FPS)^(5/3));
     Strehlfit=exp(-(sigmafit^2));
@@ -153,11 +176,25 @@ for i=1:numtrials %Run complete program multiple times
         %% This is the guts of the AO closed-loop integrating servo....
         ATMO.BEACON = GUIDE_STAR;
         %fprintf('Sensing WF\n');
-        WFS.sense(Fwfs.planewave*ATMO*AL*DM);
+        if UsePyramid == 1
+            WFS.sensePyramid(Fwfs.planewave*ATMO*AL*DM);
+        else
+            WFS.sense(Fwfs.planewave*ATMO*AL*DM);
+        end
+        Fwfs.planewave;
+        %display(sprintf('MMT_Pyr usenoise is...%1i\n' ,useNoise))
+        %WFS.sensePyramid(Fwfs.setIntensity(targetStar,band,WFS_BANDWIDTH,1/WFS_FPS)*ATMO*AL*DM,useNoise);
+%!!!!!%%%  
         if(t>AO_STARTTIME)  % Suffer with seeing limit until AO_STARTTIME.
             DM.bumpActs(-gain*RECON.RECONSTRUCTOR * WFS.slopes);
             DM.removeMean;
         end  %End of AO servo
+
+        %% Now calculate image quality for the science object
+        %ATMO.BEACON = SCIENCE_OBJECT;
+        %F.planewave*ATMO*AL*DM;  
+        %g = F.grid_;
+        %STREHL(n) = abs(mean(g(mask)))^2;
 
         
 %% Now calculate image quality for the science object

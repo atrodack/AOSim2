@@ -30,7 +30,7 @@ classdef AOReconstructor < handle
 		lambda = AOField.RBAND;
 		amplitude = AOField.RBAND/20;
         
-        verbose = false; % print debugging info.
+        verbose = true; % print debugging info.
         
         d;       %Segment size for segment reconstructor
         CENTERS; %Segment centers for segment reconstructor
@@ -119,7 +119,11 @@ classdef AOReconstructor < handle
                     %Added RECON.A 20091107. Was line below previously
 					%F.planewave * RECON.DM;
 					acts = RECON.DM.actuators(:,3);
-					RECON.WFS.sense(F);
+                    if RECON.WFS.usePyr == 1
+                        RECON.WFS.sensePyramid(F);
+                    else
+                        RECON.WFS.sense(F);
+                    end
 					slopes=RECON.WFS.slopes;
 					RECON.ACTS(:,n)   = acts;
 					RECON.SLOPES(:,n) = slopes;
@@ -128,7 +132,11 @@ classdef AOReconstructor < handle
 					RECON.DM.setActs(0).addRippleActs([kx ky],RECON.amplitude,pi/2);
 					F.planewave * RECON.DM;
 					acts = RECON.DM.actuators(:,3);
-					RECON.WFS.sense(F);
+                    if RECON.WFS.usePyr == 1
+                        RECON.WFS.sensePyramid(F);
+                    else
+                        RECON.WFS.sense(F);
+                    end
 					slopes=RECON.WFS.slopes;
 					RECON.ACTS(:,n)   = acts;
 					RECON.SLOPES(:,n) = slopes;
@@ -211,9 +219,11 @@ classdef AOReconstructor < handle
 					ABER.zero.addZernike(n,m,amp,RECON.D);
 					RECON.DM.setActs(ABER);
 					F.planewave * RECON.A * RECON.DM;
-                    %Added RECON.A 20091107. Was line below previously
-					%F.planewave * RECON.DM;
-					RECON.WFS.sense(F);
+                    if RECON.WFS.usePyr == 1
+                        RECON.WFS.sensePyramid(F);
+                    else
+                        RECON.WFS.sense(F);
+                    end
 					RECON.ACTS(:,nmode) = RECON.DM.actuators(:,3);
 					RECON.SLOPES(:,nmode) = RECON.WFS.slopes;
 					nmode = nmode + 1;
@@ -307,7 +317,11 @@ classdef AOReconstructor < handle
 					RECON.DM.setActs(ABER);
 					
 					F.planewave * RECON.A * RECON.DM;
-					RECON.WFS.sense(F);
+                    if RECON.WFS.usePyr == 1
+                        RECON.WFS.sensePyramid(F);
+                    else
+                        RECON.WFS.sense(F);
+                    end
                     
                     if(RECON.verbose)
                         [x,y]=coords(F);
@@ -395,7 +409,11 @@ classdef AOReconstructor < handle
 					ABER.zero.addZernike(n,m,amp,RECON.D);
 					RECON.DM.setActs(ABER);
 					F.planewave * RECON.A * RECON.DM;
-					RECON.WFS.sense(F);
+                    if RECON.WFS.usePyr == 1
+                        RECON.WFS.sensePyramid(F);
+                    else
+                        RECON.WFS.sense(F);
+                    end
 					RECON.ACTS(:,nmode) = RECON.DM.actuators(:,3);
 					RECON.SLOPES(:,nmode) = RECON.WFS.slopes;
 					nmode = nmode + 1;
@@ -428,7 +446,11 @@ classdef AOReconstructor < handle
                %         ABER.zero.addZernike(n,m,amp,RECON.d,RECON.CENTERS(a,1),RECON.CENTERS(a,2));
                %         RECON.DM.setSegmentActs(ABER,a);
                %         F.planewave * RECON.A * RECON.DM;
-               %         RECON.WFS.sense(F);
+               %         if RECON.WFS.usePyr == 1
+               %            RECON.WFS.sensePyramid(F);
+               %         else
+               %            RECON.WFS.sense(F);
+               %         end
                %         RECON.ACTS(:,nmode) = RECON.DM.actuators(:,3);
                %         RECON.SLOPES(:,nmode) = RECON.WFS.slopes;
                %         nmode = nmode + 1;
@@ -465,7 +487,11 @@ classdef AOReconstructor < handle
 					%RECON.DM.setActs(ABER);
 					
 					F.planewave * RECON.A * RECON.DM;
-					RECON.WFS.sense(F);
+                    if RECON.WFS.usePyr == 1
+                        RECON.WFS.sensePyramid(F);
+                    else
+                        RECON.WFS.sense(F);
+                    end
                     % RECON.WFS.quiver();
                     
                     % RECON.DM.show();
@@ -566,7 +592,11 @@ classdef AOReconstructor < handle
 					F.planewave * RECON.A * RECON.DM;
                     %Added RECON.A 20091107. Was line below previously
 					%F.planewave * RECON.DM;
-					RECON.WFS.sense(F);
+                    if RECON.WFS.usePyr == 1
+                        RECON.WFS.sensePyramid(F);
+                    else
+                        RECON.WFS.sense(F);
+                    end
 					RECON.ACTS(:,nmode) = RECON.DM.actuators(:,3);
 					RECON.SLOPES(:,nmode) = RECON.WFS.slopes;
 					nmode = nmode + 1;
@@ -644,7 +674,11 @@ classdef AOReconstructor < handle
                 fprintf('%d ',n);
                 RECON.DM.setActs(TESTVECTORS(:,n));
                 F.planewave * RECON.A * RECON.DM;
-                RECON.WFS.sense(F);
+                if RECON.WFS.usePyr == 1
+                    RECON.WFS.sensePyramid(F);
+                else
+                    RECON.WFS.sense(F);
+                end
                 WFS_SLOPES(:,n) = RECON.WFS.slopes;
                 
                 if(RECON.verbose)
