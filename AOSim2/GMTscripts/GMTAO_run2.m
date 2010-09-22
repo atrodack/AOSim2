@@ -4,7 +4,7 @@
 %PMH 20100315
 
 clear;
-numframes=10;     %number of frames to generate
+numframes=20;     %number of frames to generate
 WFS_FPS=1000;       %running at  "WFS_FPS" Hz
 AO_STARTTIME=0.001; %Starting time of AO correction
 PHASE_START=0.002;  %Starting time of phase correction
@@ -168,9 +168,7 @@ for i=1:numtrials  %Run complete program multiple times
             DM.bumpActs(-gain*RECON.RECONSTRUCTOR * WFS.slopes);
             DM.removeMean;
             CLooptime=toc(CLoop);
-            
-            
-            
+                    
             if ((t>PHASE_START)&&(t<PHASE_END))
             %Sense and correct segment pistons
             %PISTONS = WFS.magicPistonSensor(Fwfs,A);
