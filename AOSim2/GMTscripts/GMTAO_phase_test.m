@@ -1,4 +1,6 @@
-%%Script to simulate basic phase offsets of the GMT
+%%Script to simulate basic phase offsets of the GMT with a pyramid sensor 
+%PMH 100921. Basec on pyramid code in @AOWFS.m by VB
+
 
 clear;
 numframes=40;     %number of frames to generate
@@ -6,7 +8,7 @@ WFS_FPS=1000;       %running at  "WFS_FPS" Hz
 hFOV = 0.05;  % In arcsecs. Half-width
 pix=201;       %pixels in PSF image
  
-%Load in a GMT package of files.  We only use the aperture.
+%Load in a GMT package of files.  We only use the AOaperture, A.
 load binaries/GMTAO_dh1246;
     
 %%Set up a field
@@ -27,7 +29,7 @@ for n=1:numframes
     t = n/WFS_FPS;     
     %Note transpose to make column vector
     f=25;  %freqency of phase variation
-    a=2.2e-6/8; %half wave
+    a=F.lambda/4/2;   %F.lambda corresponds to half wave (??) scaling is not right
     %put in a sinusoidal phase error on one aperture only
     phase=a*sin(2*3.14*t*f);
     PISTONS = [phase 0 0 0 0 0 0]';
@@ -41,9 +43,9 @@ for n=1:numframes
     STREHL(n) = abs(mean(g(mask)))^2;
     avSTREHL=mean(STREHL(1:n));
  
-    
 %%%%%%%%Pyramid calculation from VB in AOWFS%%%%%%%%%%%%%%
     field=F.grid;
+    field(1,:)=[]; %get rid of first row to make number of rows even %%%HACK!
     fieldPad=padarray(field,size(field));
     if(mod(size(fieldPad,1), 2)==0 || mod(size(fieldPad,2),2)==0)
         display(' ')
@@ -53,19 +55,10 @@ for n=1:numframes
     end
     psfAtTipPad = fftshift(fft2(fieldPad));
     
-
-    %check that padded psf looks OK
-    %imagesc(log(abs(psfAtTipPad))); daspect([1 1 1]);
-    %title('log psfAtTipPad')
-    %pause
-
-
-
     Nelq = (size(psfAtTipPad)+1)/2;
 
-
     %Now, for the wobbling!
-    ww =2;
+    ww =0;
     w(1,:) = [ ww  ww  -ww -ww];
     w(2,:) = [ ww -ww  -ww  ww];
 
@@ -81,7 +74,7 @@ for n=1:numframes
 
         for j = 1:2
             if w(j,i) < 0
-                dd(j,:) = V2;
+                dd(j,:) = V1; %This was V2.  I don't understand this PMH
             else
                 dd(j,:) = V1;
             end
@@ -90,10 +83,17 @@ for n=1:numframes
         psfAtTip(dd(1,:),:)=0;
         psfAtTip(:,dd(2,:))=0;
 
+        %Zoom in on quadrant "psfs"
+        %figure(2);    
         %subplot(1,2,1);
-        %imagesc(log(abs(psfAtTipPad))); daspect([1 1 1]); title('orig');
+        %[sizex,sizey]=size(psfAtTipPad);
+        %hf=sizex/100;
+        %imagesc(abs(psfAtTipPad(sizex/2-hf:sizex/2+hf,sizey/2-hf:sizey/2+hf)));
+        %daspect([1 1 1]); title('orig');
         %subplot(1,2,2);
-        %imagesc(log(abs(psfAtTip))); daspect([1 1 1]); title('shifted');
+        %[sizex,sizey]=size(psfAtTip);
+        %imagesc(abs(psfAtTip(sizex/2-hf:sizex/2+hf,sizey/2-hf:sizey/2+hf)));
+        %daspect([1 1 1]); title(sprintf('shifted %d',i));
         %pause
 
         %split PSF into quadrants
@@ -113,10 +113,11 @@ for n=1:numframes
             %pause;
         end
 
-        psfpyr = [psfA,psfB;psfC,psfD];
-        figure(2)
-        imagesc(log(abs(psfpyr))); daspect([1 1 1]);
-        drawnow;
+        
+        %psfpyr = [psfA,psfB;psfC,psfD];
+        %figure(2)
+        %imagesc(log(abs(psfpyr))); daspect([1 1 1]);
+        %drawnow;
 
         %transform back to pupil plane of WFS and downsample 
         %to correct number of subapps
@@ -144,8 +145,7 @@ for n=1:numframes
         %imagesc(pupilpyr); daspect([1 1 1]);
         %drawnow;
         
-        %PMH calculate slopes at nominal resolution
-        %pupilsum=pupilA+pupilB+pupilC+pupilD;
+        %PMH calculate slopes and display at nominal resolution
         %Sx=(pupilA-pupilB+pupilC-pupilD);
         %Sy=(pupilA-pupilC+pupilB-pupilD);
 
@@ -154,10 +154,11 @@ for n=1:numframes
         %imagesc(pupilslopes); daspect([1 1 1]);
         %title(sprintf('time = %2.0f ms, phase=%.3f waves',t*1e3,phase*1e6*0.5));
         %drawnow;
+        %pause;
         
         %interpolate to final WFS sampling
         xp=linspace(1,size(pupilA,2),length(WFS.masked));
-        yp=linspace(1,size(pupilA,1),length(WFS.masked));
+        yp=linspace(1,size(pupilA,1),length(WFS.masked));   
         %xp=linspace(1,size(pupilA,1),length(WFS.masked)-1);
         %yp=linspace(1,size(pupilA,2),length(WFS.masked)-1);
         [xxp,yyp]=meshgrid(xp,yp);
@@ -198,23 +199,25 @@ for n=1:numframes
     pupilSumI = sum(sum(pupilAint+ pupilBint + pupilCint + pupilDint));
     pupilNorm = fieldSum / pupilSumI;
 
-    pupilAint = pupilAint*pupilNorm;
-    pupilBint = pupilBint*pupilNorm;
-    pupilCint = pupilCint*pupilNorm;
-    pupilDint = pupilDint*pupilNorm;
+    
+    %pupilAint = pupilAint*pupilNorm;
+    %pupilBint = pupilBint*pupilNorm;
+    %pupilCint = pupilCint*pupilNorm;
+    %pupilDint = pupilDint*pupilNorm;
     
     
     %PMH calculate slopes at nominal resolution
-    pupilsum=pupilAint+pupilBint+pupilCint+pupilDint;
     Sx=(pupilAint-pupilBint+pupilCint-pupilDint);
     Sy=(pupilAint-pupilCint+pupilBint-pupilDint);
 
 
-    %pupilslopes = [Sx,Sy];
-    %figure(2);
-    %imagesc(pupilslopes); daspect([1 1 1]);
-    %title(sprintf('time = %2.0f ms, phase=%.3f waves',t*1e3,phase*1e6*0.5));
-    %drawnow;
+    pupilslopes = [Sx,Sy];
+    figure(2);
+    imagesc(pupilslopes, [-60 60]); daspect([1 1 1]);
+    
+    title(sprintf('time = %2.0f ms, phase=%.3f waves',t*1e3,phase/F.lambda*4)); %why *4?
+    colorbar;
+    drawnow;
 % This saves the current picture as a JPEG.
     filename = sprintf('/tmp/FRAME_%04d.jpg',n);
     rez = 160;
@@ -251,7 +254,7 @@ for n=1:numframes
     subplot(1,2,2);
     [x,y]=F.coords;
     imagesc(x,y,angle(g));  %angle is atan2(imag(g)/real(g))
-    title(sprintf('time = %2.0f ms, phase=%.3f um',t*1e3,phase*1e6));
+    title(sprintf('time = %2.0f ms, phase=%.3f um',t*1e3,phase*1e6*4));  %*4???
     daspect([1 1 1]);
     axis xy;
 

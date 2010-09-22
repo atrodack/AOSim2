@@ -205,6 +205,7 @@ classdef AOWFS < AOGrid & AODetector
 
 
         function WFS = sensePyramid(WFS,F,useNoise)
+            %Pyramid sensing code 
                        
             if(~isa(F,'AOField'))
                 error('As a WFS, I am confused and frightened by %s inputs.',class(F));
