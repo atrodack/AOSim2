@@ -11,6 +11,7 @@ classdef AOGrid < handle
 	% 
     % 20090407: JLCodona
     % 20090415 JLCodona.  Added fft method and new fftgrid_ usage model.
+    % 20100514 JLCodona.  Added a coordinates caching scheme.    
     
     %% Properties
     properties(Constant=true, GetAccess='protected', SetAccess='private')
@@ -22,6 +23,7 @@ classdef AOGrid < handle
         AXIS_CORNER = 'corner';  % FFT mode.
         AXIS_FACE = 'face'; % fftshift mode.
         AXIS_ARBITRARY = 'arb';  % use ORIGIN_ to find the center.
+        
     end
     properties(GetAccess='public',SetAccess='public')
         name;
@@ -46,6 +48,17 @@ classdef AOGrid < handle
         spacing_ = [0.04 0.04]; % default
         origin_ = [0 0]; % real world coords of the grid 'center'. This is private as opposed to Offset.
         AXIS_PIXEL = [1 1]; % keep coordinated with axis_.
+        
+        % Coordinates cache
+        % the actual cache...
+        X_ = [];
+        Y_ = [];
+        % Cache update clues
+        Xextremes = []; % This only gets set by COORDS.
+        Yextremes = [];
+        Nx_ = nan;
+        Ny_ = nan;
+
     end
     
     %% Methods
@@ -103,7 +116,52 @@ classdef AOGrid < handle
             else
                 [x,y] = coords(A);
             end
-            [X,Y] = meshgrid(x,y);
+            
+            % Okay.  Try to not have to compute this.
+            
+            % see if anything has changed since the caching...
+            if(A.Nx_==length(x) && A.Ny_==length(y))
+                
+                %A.Xextremes==x([1 end])
+                %A.Yextremes==y([1 end])
+                
+                % yeah, I know this is ugly.  What I really want is a call
+                % like...
+                % if(&&(Boolean_Array)) ...
+                % If you are going to complain about elegance, provide a
+                % better solution.
+                if(prod(double([(A.Xextremes==x([1 end])) (A.Yextremes==y([1 end]))]))~=0)
+                    % Looks like nothing has changed.  Use the cache!
+                    X = A.X_;
+                    Y = A.Y_;
+                    %fprintf('<Using COORDS cached values.>\n');
+                    return;
+                else
+%                     fprintf('<COORDS Cache failed values test. x(%g %g) y(%g %g)>\n',...
+%                         A.Xextremes,x([1 end]),A.Yextremes,y([1 end]));
+                end
+            else    
+%                 fprintf('<COORDS Cache failed length test. x(%g %g) y(%g %g)>\n',...
+%                     A.Nx_,length(x),A.Ny_,length(y));
+            end
+            % Try to speed this line up...
+            %[X,Y] = meshgrid(x,y);
+            % Note that coords returns row vectors
+            
+            fprintf('<Computing mesh COORDS.>\n');
+            
+            % Go ahead and compute it.
+            X = ones(length(y),1)*x;
+            Y = y'*ones(1,length(x));
+            
+            % save the cached coordinates.
+            A.X_ = X;
+            A.Y_ = Y;
+            A.Nx_ = length(x);
+            A.Ny_ = length(y);
+
+            A.Xextremes = x([1 end]);
+            A.Yextremes = y([1 end]);
         end
         
         function dom = domain(obj)

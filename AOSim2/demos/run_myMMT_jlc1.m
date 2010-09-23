@@ -10,7 +10,7 @@
 WFS_FPS = 550;
 WFS.qscale = 1; % smaller values make the WFS arrows bigger in the quiver plot.
 
-gain=8; % gain>2 is asking for trouble!
+gain=1; % gain>2 is asking for trouble!
 % gain = 0.3; % gain>2 is asking for trouble!
 GAMMA = 2;  % This is the gamma correction for the PSF image.
 SCIENCE_WAVELENGTH = AOField.KBAND;
@@ -132,8 +132,8 @@ for n=1:2000
 	
     %% Plot some interesting pictures...
 
-%     clf; % Don't screw around.  Just clear it.
-%     subplot(N1,N2,1);
+    clf; % Don't screw around.  Just clear it.
+    subplot(N1,N2,1);
     
 	if(t < ZOOM_STARTTIME)
 		FOV = FOV_START;
@@ -147,16 +147,16 @@ for n=1:2000
 
 	RNG = FOV * [-1 1];
 	PSF = F.mkPSF(FOV,FOV/100);
-<<<<<<< .mine
+% <<<<<<< .mine
     CCD = CCD + PSF;
-% 	Ipeak = max(Ipeak,max(PSF(:)));
-% 	imagesc(RNG,RNG,(PSF/Ipeak).^(1/GAMMA));
-%     daspect([1 1 1]);
-%     title(sprintf('PSF (\\lambda=%.2g microns, \\gamma=%g) t=%.3f',...
-%         F.lambda*1e6,GAMMA,t));
-%     xlabel('arcsecs');
-%     ylabel('arcsecs');
-%     axis xy;
+	Ipeak = max(Ipeak,max(PSF(:)));
+	imagesc(RNG,RNG,(PSF/Ipeak).^(1/GAMMA));
+    daspect([1 1 1]);
+    title(sprintf('PSF (\\lambda=%.2g microns, \\gamma=%g) t=%.3f',...
+        F.lambda*1e6,GAMMA,t));
+    xlabel('arcsecs');
+    ylabel('arcsecs');
+    axis xy;
 %     
 % 	subplot(N1,N2,2);
 % 	A.show;
@@ -204,11 +204,11 @@ for n=1:2000
         
         fits_write_image('/tmp/CCD_Dump.fits',normalize(CCD),HEADER);
     end
-=======
+% =======
 	if(t>ZOOM_ENDTIME && t>AO_STARTTIME)
 		CCD = CCD + PSF;
 		if(mod(n,50)==0)
-			fits_write_image('/tmp/PSF_Exposure.fits',CCD/max(CCD(:));
+			fits_write_image('/tmp/PSF_Exposure.fits',CCD/max(CCD(:)));
 		end
 	end
 	Ipeak = max(Ipeak,max(PSF(:)));
@@ -219,14 +219,52 @@ for n=1:2000
     xlabel('arcsecs');
     ylabel('arcsecs');
     axis xy;
->>>>>>> .r122
     
+	subplot(N1,N2,2);
+	A.show;
+    colorbar off;
+	WFS.quiver(1);
+    %title('WFS Slopes (autoscaled)');
+    title('WFS Slopes');
+	
+    subplot(N1,N2,3);
+	
+    imagesc(x,y,(F.interferometer(.75)),[0 3]);
+    title('Science Band Interferometer');
+	DM.plotActuators;
+	
+    subplot(N1,N2,4);
+    xScale = linspace(-pi,pi,64);
+   
+    g=F.grid_;
+	binDat = histc(angle(g(mask)),xScale);
+	[vals,indx] = max(binDat);
+	phase0 = xScale(indx);
+	binDat = histc(angle(exp(-1i*phase0)*g(mask)),xScale);
+	%bar(xScale,binDat);
+	plot(xScale,binDat,'k.');
+    HISTMAX = max(HISTMAX,max(binDat));
+    ylim([0 1.1*HISTMAX]);  % Tweak this for your situation...
+	title(sprintf('Phase Histogram: Correcting %d modes, gain=%.2f.',...
+		RECON.Nmodes,gain));
+	xlabel('pupil phase');
+	ylabel('frequency');
+
+	subplot(N1,N2,5:6);
+	surf(x,y,DM.grid,A.grid,'LineStyle','none');
+	zlim([-1 1]*3e-6);
+	daspect([1 1 5e-6]);
+	lt=light();
+	set(lt,'Position',[-1 0 1]);
+    % You may need this if you aren't saving the frames.
+    % drawnow;
+
     %% This saves the current picture as a JPEG.
     filename = sprintf('/tmp/FRAME_%04d.jpg',n);
     rez = 160;
 
     resolution = sprintf('-r%d',rez);
-%     print(resolution,'-djpeg',filename);
+    print(resolution,'-djpeg',filename);
 	
 	if(ATMO.time>2.0)
 		break;
