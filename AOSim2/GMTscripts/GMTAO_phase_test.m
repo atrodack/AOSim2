@@ -185,10 +185,10 @@ for n=1:numframes
     pupilCint = sum(pupilCi,3);
     pupilDint = sum(pupilDi,3);
 
-    %figure(2);
-    %pupilint = [ pupilAint , pupilBint ; pupilCint, pupilDint ];
-    %imagesc(pupilint); daspect([1 1 1]);
-    %drawnow;
+    figure(2);
+    pupilint = [ pupilAint , pupilBint ; pupilCint, pupilDint ];
+    imagesc(pupilint); daspect([1 1 1]);
+    drawnow;
 
 
     %Then normalize the intensity in each pupil by the ratio of the 
@@ -211,13 +211,13 @@ for n=1:numframes
     Sy=(pupilAint-pupilCint+pupilBint-pupilDint);
 
 
-    pupilslopes = [Sx,Sy];
-    figure(2);
-    imagesc(pupilslopes, [-60 60]); daspect([1 1 1]);
+    %pupilslopes = [Sx,Sy];
+    %figure(2);
+    %imagesc(pupilslopes, [-60 60]); daspect([1 1 1]);
     
-    title(sprintf('time = %2.0f ms, phase=%.3f waves',t*1e3,phase/F.lambda*4)); %why *4?
-    colorbar;
-    drawnow;
+    %title(sprintf('time = %2.0f ms, phase=%.3f waves',t*1e3,phase/F.lambda*4)); %why *4?
+    %colorbar;
+    %drawnow;
 % This saves the current picture as a JPEG.
     filename = sprintf('/tmp/FRAME_%04d.jpg',n);
     rez = 160;
