@@ -141,7 +141,7 @@ classdef AODM < AOScreen
         end
 
         function DM = poke(DM,n,val)
-            % DM.actuators(:,3) = 0;
+            DM.actuators(:,3) = 0;
             DM.actuators(n,3) = val;
             DM.touch;
         end

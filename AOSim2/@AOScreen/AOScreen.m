@@ -116,7 +116,7 @@ classdef AOScreen < AOGrid
             START = double([1,1,FRAME]);
             STOP = double([HEADER.NAXIS1,HEADER.NAXIS2,FRAME]);
             APP = fits_read_image_subset(FITSNAME,START,STOP);
-            S.grid_ = APP*(S.lambdaRef/2/pi);
+            S.grid_ = APP'*(S.lambdaRef/2/pi);
             S.spacing(HEADER.XSPACING);
         end
         
@@ -202,7 +202,9 @@ classdef AOScreen < AOGrid
             touch(S);
 		end
 		
-		function [dPhase_meanSquare,s,dPhase_meanSquareSigma,dPhase_] ...
+		function [dPhase_meanSquare,s,...
+                dPhase_meanSquareSigma,...
+                dPhase_] ...
                 = SFestimate(PS,APER,Npoints,dspacing,lambda)
 			% Estimate the AOScreen structure function by brute force.
 			% This method Starts with Npoints in the PS grid and then

@@ -40,6 +40,8 @@ classdef AOField < AOGrid
             k = 2*pi/F.lambda;
             [kx,ky] = kcoords(F);
             
+            % This is the size of the FFT pixels...
+            dTH = F.dk/F.k*206265;
             thx_ = kx/k*206265;
             thy_ = ky/k*206265;
             
@@ -47,8 +49,10 @@ classdef AOField < AOGrid
                 dth = median(diff(thx_));
             end
             
-            SELx = abs(thx_)<=FoV;
-            SELy = abs(thy_)<=FoV;
+            % this is get a slightly larger region to interpolate into.
+            % No more NaNs!
+            SELx = abs(thx_)<=(FoV+2*dTH(1)); 
+            SELy = abs(thy_)<=(FoV+2*dTH(2));
             thx_ = thx_(SELx);
             thy_ = thy_(SELy);
             [THX_,THY_] = meshgrid(thx_,thy_);
@@ -179,5 +183,28 @@ classdef AOField < AOGrid
             wavenumber = 2*pi/this.lambda;
         end    
         
+        function F = setIntensity(F,star,band, bandWidth,integrationTime)
+            if isa(star,'AOStar')
+                if nargin < 5
+                    integrationTime = 1;
+                end
+                bandIntFlux = bandWidth * star.GetNumPhotons(band,integrationTime);
+            elseif isa(star,'double')
+                bandIntFlux = star;
+            else
+                error('Confusing input to SetIntensity')
+            end
+            
+            
+            [xf,yf] = coords(F); % Fine grid of the field.
+
+            fieldArea = abs(xf(end)-xf(1)) * abs(yf(end) - yf(1));
+            
+            numPixels = size(F.grid,1) * size(F.grid,2);
+            
+            pixelArea = fieldArea/numPixels;
+            
+            F.grid_ = F.grid_ * bandIntFlux * pixelArea;
+        end
     end
 end

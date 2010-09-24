@@ -30,7 +30,7 @@ classdef AOReconstructor < handle
 		lambda = AOField.RBAND;
 		amplitude = AOField.RBAND/20;
         
-        verbose = true; % print debugging info.
+        verbose = false; % print debugging info.
         
         d;       %Segment size for segment reconstructor
         CENTERS; %Segment centers for segment reconstructor
@@ -216,7 +216,10 @@ classdef AOReconstructor < handle
                 fprintf('\nOrder %d:',n);
                 amp = 1*RECON.lambda/4/n;
 				for m=-n:2:n
-					ABER.zero.addZernike(n,m,amp,RECON.D);
+                    
+                    weight = (n^2 + m^2).^(-5/6);
+					%ABER.zero.addZernike(n,m,amp,RECON.D);
+					ABER.zero.addZernike(n,m,weight*amp,RECON.D);
 					RECON.DM.setActs(ABER);
 					F.planewave * RECON.A * RECON.DM;
                     if RECON.WFS.usePyr == 1
@@ -777,7 +780,13 @@ classdef AOReconstructor < handle
 			
             if(isempty(RECON.s))
                 fprintf('WARNING: RECONSTRUCTOR not trained using an SVD method.\n');
-                return;
+                %return;
+                [UU,SS,VV] = svd(RECON.SLOPES','econ');
+                RECON.U = UU;
+                RECON.s = diag(SS);
+                RECON.V = VV;
+                
+                clear UU SS VV
             end
 
 			fprintf('The normalized singular value current cutoff is %g.\n', RECON.Scutoff);

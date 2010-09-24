@@ -34,6 +34,7 @@ classdef AOWFS < AOGrid & AODetector
             WFS.spacing([1 1].*spacing);
             %Isn't below unnecessary??  PMH commented out 091107
             %WFS.Offset=(mod(WFS.size,2)==0).*WFS.spacing/2; % even number subaps get bumped by half to center.
+            WFS.masked = false(size(WFS));
             %WFS.masked = (APER.interpGrid(WFS)<0.75); % This might be better as a static parameter.
             WFS.centerOn(APER);
             WFS.Offset = WFS.Offset+(mod(WFS.size,2)==0).*WFS.spacing/2; % even number subaps get bumped by half to center.
