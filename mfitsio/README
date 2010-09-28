@@ -1,0 +1,234 @@
+
+                         MFITSIO Version 1.2.4
+
+                      Damian Eads, eads@lanl.gov
+                Space and Remote Sensing Science Group
+                    Los Alamos National Laboratory
+
+1. Introduction
+
+   MFITSIO is a MATLAB interface to the cfitsio library. MFITSIO is
+   used to read images and headers stored in the Flexible Image
+   Transport System (FITS) file format. This format is most commonly
+   used by astrophysics to record astronomical data and observations.
+
+   1.1 What features of CFITSIO does MFITSIO support?
+
+   MFITSIO currently supports reading and writing of images, FITS headers,
+   image stacks, N-D image arrays (N>3), and reading/writing of image
+   subsets. For a list of supported data types, refer to Section 5.
+
+   1.2 What features will MFITSIO support in the future?
+
+   In the future, MFITSIO will support routines to manipulate FITS tables,
+   random image groups, ASCII tables, binary tables, variable length arrays,
+   world coordinate system, and image compression.
+
+   1.3 How does MFITSIO work?
+
+   Most of the MFITSIO library is written in C. In order to interface with 
+   MATLAB, it uses the MATLAB External Interface Library called "mex".
+   MFITSIO makes C calls to CFITSIO and translates the output into data 
+   structures MATLAB can understand using mex routines. Take a look 
+   at several M-files included with MFITSIO. Notice how many of them are 
+   missing an implementation. Each one of these m-files corresponds to a
+   c file. Each of these c files is compiled with the work horse program 
+   mfitsio.c, and a MATLAB readable executable results. Whenever a MFITSIO
+   m-file is executed, the compiled C program will be run if a mex 
+   executable is found.
+
+   1.4 What platforms does MFITSIO work on?
+
+   MFITSIO will work on any platform in which (a) CFITSIO can compile
+   into a linked library, (b) MATLAB will successfully run, and (c)
+   MathWork's mex is supported. These platforms should include:
+
+      Linux on Pentium Family and AMD Athlon Family Architectures
+      Mac OS X on Power Macintosh G3 or G4
+      Solaris 2.6, 2.7, or 2.8 on Sparc
+      HP-UX on PA-RISC 1.1, PA-RISC 2.0
+      IRIX on R5000, R8000, R10000, R12000
+      AIX on RS/6000
+      Tru64 Unix on Alpha
+      Windows on Pentium Family and AMD Athlon Family Architectures
+
+   A comprehensive list of system requirements for MATLAB is available
+   from MathWorks, http://www.mathworks.com/products/matlab/requirements.jsp.
+
+   Please note: due to the limited availability of architectures
+   I can access, MFITSIO has only been tested on Linux, Solaris
+   Tru64 Unix, and Windows.
+
+2. Installation of CFITSIO
+
+   2.1 If the CFITSIO library is not installed on your environment then
+   download it from http://heasarc.gsfc.nasa.gov/docs/software/fitsio.
+
+   2.2 Follow the installation instructions on their website.
+
+   2.3 Ensure your LIBRARY_PATH and LD_LIBRARY PATH point to the
+   location of the cfitsio library. Also, verify that your
+   INCLUDE_PATH points to the location of the cfitsio header files.
+
+   2.4 After successfully installing CFITSIO, continue reading section 3.
+
+3. Installation of MFITSIO
+
+   There are two ways to install MFITSIO. First, you can download
+   pre-compiled binaries for your operating system. If you would like
+   to install MFITSIO in this fashion, then go to step 2.1. The other
+   option is to compile MFITSIO source code into a binary. This may be
+   necessary if the first installation method does not work or a
+   pre-compiled binary is not available for your operating system.
+
+   3.1 Using a Pre-compiled Binary
+
+       A. Download a pre-compiled library from the website,
+       http://nis-www.lanl.gov/~eads/mfitsio. The binaries are
+       platform-specific so if you cannot find an appropriate one,
+       you must compile the source yourself.
+
+       B. Extract the file by typing:
+	  gzip -cd TARBALL_NAME | tar xvf -
+
+       C. This will create a directory beginning with the name
+       "mfitsio". All of the binaries and M-files will be stored
+       in this directory.
+
+       D. Continue reading Section 4.
+
+   3.2 Compiling MFITSIO
+
+       A. Download a source tar ball from the website,
+       http://nis-www.lanl.gov/~eads/mfitsio.
+
+       B. Extract the file by typing:
+	  gzip -cd TARBALL_NAME | tar xvf -
+
+       C. This will create a directory beginning with the name
+       "mfitsio". All of the binaries and M-files will be stored
+       in this directory.
+
+       D. Change your working directory to the directory just created.
+
+       E. Run make. Your platform should be auto detected. If your
+       uname is not supported or recognized, an error will be
+       reported. Upon auto-detection, the binaries will be compiled
+       and stored in the same directory where you executed make.
+
+       F. If compilation was successful, continue on to Section 4.
+
+       G. Note: MFITSIO only runs on the platforms that are
+       supported by mex and MATLAB. If the make fails to auto-detect
+       your platform, try specifying your platform manually by
+       entering one of the following:
+
+          make linux
+          make solaris
+          make macosx
+          make hp700
+          make hpunix
+          make irix
+          make alpha
+          make rs6000
+          make win32
+
+4. Configuring MATLAB
+
+   A. Start a MATLAB session.
+
+   B. You will need to add the fully qualified path where the MFITSIO
+   files are stored to your MATLAB path. The reason is so that
+   whenever you start up MATLAB, it can find the MFITSIO library
+   files. Adding a path is accomplished by doing the following:
+
+      * Click on File...Set Path...Add Folder.
+      * Single click on the directory where the MFITSIO files are
+        stored.
+      * Click on Close.
+      * A dialog box will appear asking whether you wish to save the
+	new path for future sessions. Choose "yes".
+
+   C. After successfully installing MFITSIO and configuring MATLAB,
+   MFITSIO is ready for use!
+
+5. Basic Information
+
+   5.1. MATLAB to FITS Image Data Type Conversion Table
+
+      +------------------+-----------------+-----------------+
+      | MATLAB DATA TYPE | FITS IMAGE TYPE |   FITS BITPIX   |
+      +------------------+-----------------+-----------------+
+      | int8             | Unsupported     | Unsupported     |
+      | uint8            | BYTE_IMG        | 8               |
+      | int16            | SHORT_IMG       | 16              |
+      | uint16           | USHORT_IMG      | 16              |
+      | int32            | LONG_IMG        | 32              |
+      | uint32           | ULONG_IMG       | 32              |
+      | int64*           | LONGLONG_IMG    | Unsupported     |
+      | uint64*          | LONGLONG_IMG    | 64              |
+      | single           | FLOAT_IMG       | -32             |
+      | double           | DOUBLE_IMG      | -64             |
+      | logical          | Unsupported     | Unsupported     |
+      | char             | Unsupported     | Unsupported     |
+      +------------------+-----------------+-----------------+
+       * Indicates that the data type has not been tested.
+
+   5.2. FITS to MATLAB Image Data Type Conversion Table
+
+      +-----------------+-----------------+------------------+
+      |   FITS BITPIX   | FITS IMAGE TYPE | MATLAB DATA TYPE |
+      +-----------------+-----------------+------------------+
+      | 8               | BYTE_IMG        | uint8            |
+      | 16              | SHORT_IMG       | int16            |
+      | 32              | LONG_IMG        | int32            |
+      | 64              | LONGLONG_IMG    | int64            |
+      | -32             | SINGLE_IMG      | single           |
+      | -64             | DOUBLE_IMG      | double           |
+      +-----------------+-----------------+------------------+
+
+   5.3. Known issues:
+
+      * If an element in an array of type:
+          - uint16 is greater than 2^15 or
+          - uint32 is greater than 2^31,
+        then an overflow error 412 occurs. One explanation for this bug
+        is that CFITSIO treats unsigned types as signed types (i.e.
+        UNSIGNED_MAX=abs(SIGNED_MIN)).
+
+      * The LONGLONG data type compiles however an error is returned when
+        passing in 64 bit signed and unsigned integers.
+
+   5.4. MATLAB API Reference
+
+      Simply enter "help mfitsio" at a MATLAB prompt to get help on using
+      MFITSIO functions. This assumes that your MATLAB points to the
+      directory where all of the MFITSIO .m files are located. If this
+      directory is called mfitsio-X.Y.Z, you must type "help mfitsio-X.Y.Z".
+
+6. Contact Information
+
+   Praise, constructive criticism, bug reports, and suggestions may be
+   directed to Damian Eads <eads@lanl.gov>.
+
+7. Legal Stuff
+
+   This software and ancillary information (herein called ``Software'')
+   called MFITSIO is made available under the terms described here. The
+   SOFTWARE has been approved for release with associated LA-CC number:
+   LA-CC-02-085.
+
+   This SOFTWARE has been authored by an employee or employees of the
+   University of California, operator of the Los Alamos National Laboratory
+   under Contract No. W-7405-ENG-36 with the U.S. Department of Energy. 
+   The U.S. Government has rights to use, reproduce, and distribute this
+   SOFTWARE.  The public may copy, distribute, prepare derivative works and
+   publicly display this SOFTWARE without charge, provided that this Notice
+   and any statement of authorship are reproduced on all copies.  Neither
+   the Government nor the University makes any warranty, express or
+   implied, or assumes any liability or responsibility for the use of this
+   SOFTWARE.  If SOFTWARE is modified to produce derivative works, such
+   modified SOFTWARE should be clearly marked, so as not to confuse it with
+   the version available from LANL.
+
+   Copyright (C) The Regents of the University of California, 2002-2005.

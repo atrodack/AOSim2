@@ -1,0 +1,47 @@
+UNAME=`uname -s`
+TARGET=$1
+
+case "${UNAME}" in
+       SunOS*)
+		make solaris_${TARGET}
+		exit 0 ;;
+       Solaris*)
+		make solaris_${TARGET}
+		exit 0 ;;
+       Linux*)
+		make linux_${TARGET}
+		exit 0 ;;
+       cygwin*)
+		make win32_${TARGET}
+		exit 0 ;;
+       CYGWIN*)
+		make win32_${TARGET}
+		exit 0 ;;
+       [Ww]in32)
+		make win32_${TARGET}
+		exit 0 ;;
+       [Ww]indows_NT)
+		make win32_${TARGET}
+		exit 0 ;;
+       HP-UX*)
+		make hpunix_${TARGET}
+		exit 0 ;;
+       hp7??)
+		make hp700_${TARGET}
+		exit 0 ;;
+       HP7??)
+		make hp700_${TARGET}
+		exit 0 ;;
+       IRIX*)
+		make irix_${TARGET}
+		exit 0 ;;
+       OSF*)
+                make alpha_${TARGET}
+		exit 0 ;;
+       LynxOS*)
+		make rs6000_${TARGET}
+		exit 0 ;;
+       AIX)
+		make rs6000_${TARGET}
+		exit 0 ;;
+esac

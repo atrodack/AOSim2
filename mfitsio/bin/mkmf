@@ -1,0 +1,3 @@
+# /bin/sh
+# This script is used to auto-generate a makefile.
+cat Makefile.root | sed "s/mexglx/${1}/g" | sed "s/Linux/${2}/g" >> Makefile

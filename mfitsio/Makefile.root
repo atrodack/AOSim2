@@ -1,0 +1,60 @@
+Linux: Linux_binaries
+
+Linux_binaries: fits_read_image.mexglx \
+                fits_write_image.mexglx \
+                fits_read_header.mexglx \
+                fits_write_header.mexglx \
+                fits_delete_keyword.mexglx \
+		fits_read_image_subset.mexglx \
+		fits_write_image_subset.mexglx
+
+fits_read_image.mexglx: fits_read_image.c $(HEADERS) $(C_FILES)
+	$(CC) fits_read_image.c $(CFLAGS)
+
+fits_read_image_subset.mexglx: fits_read_image_subset.c $(HEADERS) $(C_FILES)
+	$(CC) fits_read_image_subset.c $(CFLAGS)
+
+fits_write_image_subset.mexglx: fits_write_image_subset.c $(HEADERS) $(C_FILES)
+	$(CC) fits_write_image_subset.c $(CFLAGS)
+
+fits_write_image.mexglx: fits_write_image.c $(HEADERS) $(C_FILES)
+	$(CC) fits_write_image.c $(CFLAGS)
+
+fits_read_header.mexglx: fits_read_header.c $(HEADERS) $(C_FILES)
+	$(CC) fits_read_header.c $(CFLAGS)
+
+fits_write_header.mexglx: fits_write_header.c $(HEADERS) $(C_FILES)
+	$(CC) fits_write_header.c $(CFLAGS)
+
+fits_delete_keyword.mexglx: fits_delete_keyword.c $(HEADERS) $(C_FILES)
+	$(CC) fits_delete_keyword.c $(CFLAGS)
+
+Linux_tar_binaries:
+	mkdir mfitsio-$(VERSION)-Linux-bin
+	mkdir mfitsio-$(VERSION)-Linux-bin/mfitsio
+	cd mfitsio-$(VERSION)-Linux-bin/mfitsio; \
+	mkdir bin doc; \
+	cp ../../bin/adetect ../../bin/mkmf ./bin; \
+	cp ../../*.m ../../*.mexglx \
+	   ../../README ../../NEWS ../../COPYING ../../AUTHORS ../../INSTALL \
+	   ../../Makefile .
+	tar cvf - mfitsio-$(VERSION)-Linux-bin/* \
+	        | gzip -c - > mfitsio-$(VERSION)-Linux-bin.tar.gz
+	rm -rf mfitsio-$(VERSION)-Linux-bin
+
+Linux_tar_src:
+	mkdir mfitsio-$(VERSION)-src
+	mkdir mfitsio-$(VERSION)-src/mfitsio
+	cd mfitsio-$(VERSION)-src/mfitsio; \
+	mkdir bin doc; \
+	cp ../../bin/adetect ../../bin/mkmf ./bin; \
+	cp ../../Makefile ../../Makefile.root ../../Makefile.header .; \
+	cp ../../*.[chm] ../../ChangeLog ../../README ../../NEWS ../../COPYING ../../AUTHORS ../../INSTALL .
+	tar cvf - mfitsio-$(VERSION)-src/* | gzip -c - > mfitsio-$(VERSION)-src.tar.gz
+	rm -rf mfitsio-$(VERSION)-src
+
+Linux_doc:
+	doxygen Doxyfile
+
+Linux_clean:
+	rm *.mexglx

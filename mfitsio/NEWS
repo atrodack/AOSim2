@@ -1,0 +1,52 @@
+--------- 1.2.4 ---------
+* Due to changes to gcc to make it more compliant with the standard,
+mfitsio did not compile. I have tweaked the code so that it is more
+compliant with the standard.
+
+--------- 1.2.3 ---------
+* Fixed a minor typographical error in version 1.2.2 involving a literal 
+string spanning multiple lines. Apparently, older versions of gcc did not 
+return an error when this occurred. Based on recent reports from people 
+using new, more standards-compliant compilers, I was able to detect the 
+error. No other updates are present in this release.
+
+--------- 1.2.2 ---------
+* Thanks to Shukur Kholikov (kholikov@noao.edu) for noticing that files 
+opened in fits_read_info (C function) were not closed. After enough 
+successive calls to fits_read_header or fits_read, the open file 
+descriptor limit would have been reached. This problem is fixed.
+
+--------- 1.2.1 ---------
+* Files in fits_read, fits_read_image, and fits_read_header were being 
+opened in READ_WRITE mode. Fixed this so that read-only files could be 
+opened.
+
+--------- 1.2 -----------
+* Removed all use of the fits_transpose_all function.
+
+* FITS reading/writing interface routines are now more dynamic.
+
+* Fixed some kludges in fits_read_image_impl. In particular, double
+arrays are not created as an intermediate step prior to returning
+a FITS array to the MATLAB environment. As a result significantly less
+processing time and memory is used.
+
+* Fixed bug in fits_write_image_impl. Bug was caused by improperly
+casting non-double values to double causing an overflow when the
+BITPIX is not -64.
+
+* Added more information about data type conversion to the README file.
+--------- 1.1 -----------
+* Fixed memory bug caused when reading a FITS file directly after writing
+to the same file.
+
+* Finished implementing the fits_read_subset and fits_write_subset
+functions. This is particularly useful for reading hyperspectral
+images.
+
+--------- 1.0 -----------
+This is the first version of MFITSIO. MFITSIO provides a MATLAB
+interface to the cfitsio library available from NASA. For a complete
+description of MFITSIO as well as its features, consult the README
+file. The primary purpose of this file is to report changes and
+additions in each version.

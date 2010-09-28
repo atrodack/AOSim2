@@ -1,0 +1,151 @@
+2003-02-21  Damian R. Eads  <eads@odo.lanl.gov>
+
+	* mfitsio.c, mfitsio.h: Changed MFITSIO_READONLY flag to READONLY
+	instead of READWRITE. Removed dead code.
+
+2003-02-21  Damian R. Eads  <eads@odo.lanl.gov>
+
+	* Makefile.header (VERSION): Changed version from 1.2 to 1.3
+
+	* Makefile: has been regenerated.
+
+	* mfitsio.c, mfitsio.h: Added fits_read_image_execute and
+	fits_write_header_execute wrapper methods which execute a specific
+	CFITSIO function based on the MATLAB/FITS data type. double arrays
+	are no created as an intermediate step to loading in a FITS image.
+	All references to fits_transpose_all have been removed.
+
+	* Contents.m: removed help information concerning
+	fits_tranpose_all.
+
+	* README: Added documentation concerning data type conversion.
+
+	* NEWS: Documented major changes in NEWS file.
+
+	* fits_transpose_all (Removed): this file is no longer needed.
+
+2003-02-07  Damian R. Eads  <eads@afreet.lanl.gov>
+
+	* fits_read_image_subset.m, fits_write_image_subset.m, Contents.m:
+	made documentation clearer.
+
+	* fits_write_image_subset.c: Fixed typo in header. Changed
+	"Sofware" to "Software".
+
+	* Makefile, Makefile.root: Fixed directory structure of tar balls
+	so that all m-files are placed in "mfitsio" directory. This allows
+	the "help mfitsio" command to work without too much fuss.
+
+2003-02-05  Damian R. Eads  <eads@odo.lanl.gov>
+
+	* mfitsio.c: I made minor infrastructural changes to support reading
+	either the entire image or just a particular subset. fits_write_image
+	is now split into two different functions fits_write_image and
+	fits_write_image_impl.
+
+	* mfitsio.h: Added necessary prototypes for new routines in
+	mfitsio.c.
+
+	* fits_write_image_subset.c, fits_write_image_subset.m,
+	fits_read_image_subset.c, fits_read_image_subset.c: new files
+	added to facilitate interfaces for reading image subsets.
+
+	* Makefile, Makefile.header, Makefile.root: I added new files to the
+	makefile targets. Version number updated.
+
+	* NEWS, README, COPYING: Documentation now includes information
+	about the new features.
+
+	* Contents.m: Help added for new M files.
+
+2003-02-03  Damian R. Eads  <eads@afreet.lanl.gov>
+
+	* *.[cmh]: Fixed misspelling in the copyright notice.
+
+2003-01-25  Damian R. Eads  <eads@afreet.lanl.gov>
+
+	* Makefile.header, Makefile.Makefiles, Makefile: Changed header on
+	makefiles.
+
+	* *.[cmh]: Changed the licensing notice once again as per the
+	suggestion of LBD. I still have yet to release the software to the
+	public.
+
+2003-01-15  Damian R. Eads  <eads@odo.lanl.gov>
+
+	* *.[cmh]: As per the suggestion of IBD, LPGL license
+	information has been removed. A DOE-specific notice is in effect
+	for MFITSIO until further notice.
+
+2002-12-18  Damian R. Eads  <eads@odo.lanl.gov>
+
+	* README: Fixed typographical mistake.
+
+	* mfitsio_license.m: Removed page break symbols.
+
+	* *.[chm], Makefile*, README, COPYING: Modified licensing
+	information in all files to conform to LANL standards.
+
+2002-12-13  Damian R. Eads  <eads@odo.lanl.gov>
+
+	* mfitsio.c: Changed declaration of two variables so that there
+	are const r-values to make some old compilers happy.
+
+	* Makefile: Auto-generated Makefile after making changes to
+	Makefile.root.
+
+	* Makefile.root (Linux): Changed tar balling procedure. Still
+	kludgy but looks considerably cleaner.
+
+2002-12-12  Damian R. Eads  <eads@odo.lanl.gov>
+
+	* mfitsio.c: Added numbers to each error message so that when
+	users report bugs or problems, exit point can be obtained.
+
+	* fits_write.m: Changed help text for function.
+
+2002-12-11  Damian R. Eads  <eads@odo.lanl.gov>
+
+	* mfitsio.c: I renamed fits_get_minfo to fits_read_info. The MATLAB
+	struct is no longer used to extract this information. I fixed a
+	bug in the process as the keywords were being filtered out anyways.
+
+	* Makefile*: Added cfitsio.c as a dependency for each mex
+	compilation. That way if it is changed, all mex files are
+	recompiled the next time make is invoked.
+	
+	* README: Wrote installation and configuration instructions for
+	MFITSIO.
+
+	* NEWS: Wrote news for first version.
+
+	* *.m: Documented all M-files. Provided table of contents in
+	Contents.m.
+
+2002-12-10  Damian R. Eads  <eads@odo.lanl.gov>
+
+	* adetect: serves a purpose similar to config.guess.
+	
+2002-12-10  Damian R. Eads  <eads@odo.lanl.gov>
+
+	* Doxyfile: Changed configuration so that all source files can
+	be viewed from the doxygen generated documentation.
+
+	* Makefile, Makefile.Makefiles, Makefile.header, Makefile.root:
+	Changed Makefile architecture so that there is only one main
+	makefile from which everything is built.
+
+2002-12-10  Damian R. Eads  <eads@afreet.lanl.gov>
+
+	* fits_delete_keyword.c, fits_read_image.c, fits_write_header.c,
+	fits_write.m, fits_delete_keyword.m, fits_read_image.m,
+	fits_write_header.m, mfitsio.c, fits_read_header.c, fits_read.m,
+	fits_write_image.c, mfitsio.h, fits_read_header.m,
+	fits_transpose_all.m, fits_write_image.m: First incarnation of the
+	mfitsio library is complete. All functions seem to be working.
+
+	* Makefile: Builds mfitsio.
+
+	* Makefile.Makefiles: Creates platform-dependent makefiles.
+
+	* bin/mkmf: Generates a makefile.

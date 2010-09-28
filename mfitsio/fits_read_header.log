@@ -1,0 +1,309 @@
+This is pdfTeXk, Version 3.141592-1.40.3 (Web2C 7.5.6) (format=mex 2008.11.19)  12 DEC 2008 09:52
+entering extended mode
+ %&-line parsing enabled.
+**fits_read_header.c mfitsio.c -lcfitsio -I/usr/local/include
+(./fits_read_header.c
+This is MeX  Version 1.05  18 XII 1993  (B. Jackowski & M. Ry\'cko)
+! Missing $ inserted.
+<inserted text> 
+                $
+<to be read again> 
+                   _
+l.2  * File:        fits_
+                         read_header.c
+? 
+! Interruption.
+<to be read again> 
+                   _
+l.2  * File:        fits_
+                         read_header.c
+? q
+OK, entering \batchmode...
+! Missing $ inserted.
+<inserted text> 
+                $
+<to be read again> 
+                   \par 
+l.27 
+     
+I've inserted a begin-math/end-math symbol since I think
+you left one out. Proceed, with fingers crossed.
+
+
+Overfull \hbox (135.26283pt too wide) in paragraph at lines 1--27
+[]\tenrm /** * File: fits$[]\teni ead[]eader:c \tensy ^^C \teni Author \tenrm :
+ \teni DamianRyanEads < eads\tenrm @\teni lanl:gov > \tensy ^^C\teni Descriptio
+n \tenrm : \teni Thegatewayprogramforfits[]ead[]eader: \tensy ^^C|
+
+\hbox(7.5+2.5)x469.75499, glue set - 1.0
+.\hbox(0.0+0.0)x20.0
+.\tenrm /
+.\tenrm *
+.\tenrm *
+.\glue 3.33333 plus 1.66666 minus 1.11111
+.etc.
+
+
+Overfull \hbox (258.84084pt too wide) in paragraph at lines 1--27
+\teni Created \tenrm : \teni December\tenrm 2\teni ; \tenrm 2002 \tensy ^^C ^^C
+\teni Thissoftwareandancillaryinformation\tenrm (\teni hereincalled\tenrm \\ten
+i Software[]\tenrm ) \tensy ^^C \teni calledMFITSIOismadeavailableundertheterms
+describedhere:The \tensy ^^C|
+
+\hbox(7.51782+2.5)x469.75499, glue set - 1.0
+.\teni C
+.\kern0.71527
+.\teni r
+.\kern0.27779
+.\teni e
+.etc.
+
+
+Overfull \hbox (265.06383pt too wide) in paragraph at lines 1--27
+\teni SOFTWAREhasbeenapprovedforreleasewithassociatedLA \tensy ^^@ \teni CCnumb
+er \tenrm : \tensy ^^C\teni LA \tensy ^^@ \teni CC \tensy ^^@ \tenrm 02 \tensy 
+^^@ \tenrm 085\teni : \tensy ^^C ^^C\teni ThisSOFTWAREhasbeenauthoredbyanemploy
+eeoremployeesofthe \tensy ^^C|
+
+\hbox(6.94444+1.94444)x469.75499, glue set - 1.0
+.\teni S
+.\kern0.57637
+.\teni O
+.\kern0.27779
+.\teni F
+.etc.
+
+
+Overfull \hbox (27.77808pt too wide) in paragraph at lines 1--27
+\teni ENG \tensy ^^@ \tenrm 36\teni withtheU:S:DepartmentofEnergy: \tensy ^^C \
+teni TheU:S:Governmenthasrightstouse; reproduce; anddistributethis \tensy ^^C|
+
+\hbox(6.94444+1.94444)x469.75499, glue set - 1.0
+.\teni E
+.\kern0.57637
+.\teni N
+.\kern1.09026
+.\teni G
+.etc.
+
+
+Overfull \hbox (185.63231pt too wide) in paragraph at lines 1--27
+\teni SOFTWARE:Thepublicmaycopy; distribute; preparederivativeworksand \tensy ^
+^C \teni publiclydisplaythisSOFTWAREwithoutcharge; providedthatthisNotice \tens
+y ^^C|
+
+\hbox(6.94444+1.94444)x469.75499, glue set - 1.0
+.\teni S
+.\kern0.57637
+.\teni O
+.\kern0.27779
+.\teni F
+.etc.
+
+
+Overfull \hbox (115.60326pt too wide) in paragraph at lines 1--27
+\teni andanystatementofauthorshiparereproducedonallcopies:Neither \tensy ^^C \t
+eni theGovernmentnortheUniversitymakesanywarranty; expressor \tensy ^^C|
+
+\hbox(6.94444+1.94444)x469.75499, glue set - 1.0
+.\teni a
+.\teni n
+.\teni d
+.\teni a
+.\teni n
+.etc.
+
+
+Overfull \hbox (153.96376pt too wide) in paragraph at lines 1--27
+\teni implied; orassumesanyliabilityorresponsibilityfortheuseofthis \tensy ^^C 
+\teni SOFTWARE:IfSOFTWAREismodifiedtoproducederivativeworks; such \tensy ^^C|
+
+\hbox(6.94444+1.94444)x469.75499, glue set - 1.0
+.\teni i
+.\teni m
+.\teni p
+.\teni l
+.\kern0.19678
+.etc.
+
+
+Overfull \hbox (3.97737pt too wide) in paragraph at lines 1--27
+\teni modifiedSOFTWAREshouldbeclearlymarked; soasnottoconfuseitwith \tensy ^^C 
+\teni theversionavailablefromLANL: \tensy ^^C|
+
+\hbox(6.94444+1.94444)x469.75499, glue set - 1.0
+.\teni m
+.\teni o
+.\teni d
+.\teni i
+.\teni f
+.etc.
+
+! You can't use `macro parameter character #' in vertical mode.
+l.28 #
+      include <string.h>
+Sorry, but I'm not programmed to handle this case;
+I'll just pretend that you didn't ask for it.
+If you're in the wrong mode, you might be able to
+return to the right one by typing `I}' or `I$' or `I\par'.
+
+! You can't use `macro parameter character #' in horizontal mode.
+l.29 #
+      include <stdio.h>
+Sorry, but I'm not programmed to handle this case;
+I'll just pretend that you didn't ask for it.
+If you're in the wrong mode, you might be able to
+return to the right one by typing `I}' or `I$' or `I\par'.
+
+! You can't use `macro parameter character #' in horizontal mode.
+l.30 #
+      include <fitsio.h>
+Sorry, but I'm not programmed to handle this case;
+I'll just pretend that you didn't ask for it.
+If you're in the wrong mode, you might be able to
+return to the right one by typing `I}' or `I$' or `I\par'.
+
+! You can't use `macro parameter character #' in horizontal mode.
+l.31 #
+      include <malloc.h>
+Sorry, but I'm not programmed to handle this case;
+I'll just pretend that you didn't ask for it.
+If you're in the wrong mode, you might be able to
+return to the right one by typing `I}' or `I$' or `I\par'.
+
+! You can't use `macro parameter character #' in vertical mode.
+l.33 #
+      include "mex.h"
+Sorry, but I'm not programmed to handle this case;
+I'll just pretend that you didn't ask for it.
+If you're in the wrong mode, you might be able to
+return to the right one by typing `I}' or `I$' or `I\par'.
+
+! You can't use `macro parameter character #' in horizontal mode.
+l.34 #
+      include "matrix.h"
+Sorry, but I'm not programmed to handle this case;
+I'll just pretend that you didn't ask for it.
+If you're in the wrong mode, you might be able to
+return to the right one by typing `I}' or `I$' or `I\par'.
+
+! You can't use `macro parameter character #' in horizontal mode.
+l.35 #
+      include "mfitsio.h"
+Sorry, but I'm not programmed to handle this case;
+I'll just pretend that you didn't ask for it.
+If you're in the wrong mode, you might be able to
+return to the right one by typing `I}' or `I$' or `I\par'.
+
+! Missing $ inserted.
+<inserted text> 
+                $
+<to be read again> 
+                   _
+l.38  * Executes the fits_
+                          read_header function. Type "help fits_read_header"...
+I've inserted a begin-math/end-math symbol since I think
+you left one out. Proceed, with fingers crossed.
+
+! Missing $ inserted.
+<inserted text> 
+                $
+<to be read again> 
+                   \par 
+l.46 
+     
+I've inserted a begin-math/end-math symbol since I think
+you left one out. Proceed, with fingers crossed.
+
+
+Overfull \hbox (193.46834pt too wide) in paragraph at lines 37--46
+[]\tenrm /** * Exe-cu-tes the fits$[]\teni ead[]eaderfunction:Type\tenrm "\teni
+ helpfits[]ead[]eader\tenrm "\teni for \tensy ^^C \teni moreinformation: \tensy
+ ^^C ^^C\tenrm @\teni paramnlhsThetotalnumberofoutputarguments: \tensy ^^C|
+
+\hbox(7.5+2.5)x469.75499, glue set - 1.0
+.\hbox(0.0+0.0)x20.0
+.\tenrm /
+.\tenrm *
+.\tenrm *
+.\glue 3.33333 plus 1.66666 minus 1.11111
+.etc.
+
+
+Overfull \hbox (65.32777pt too wide) in paragraph at lines 37--46
+\tenrm @\teni paramplhsTheoutputarguments: \tensy ^^C \tenrm @\teni paramnrhsTh
+etotalnumberofinputarguments: \tensy ^^C \tenrm @\teni paramprhsTheinputargumen
+ts: \tensy ^^C|
+
+\hbox(6.94444+1.94444)x469.75499, glue set - 1.0
+.\tenrm @
+.\teni p
+.\teni a
+.\teni r
+.\kern0.27779
+.etc.
+
+! Missing $ inserted.
+<inserted text> 
+                $
+<to be read again> 
+                   _
+l.52   mfitsio_
+               header *header;
+I've inserted a begin-math/end-math symbol since I think
+you left one out. Proceed, with fingers crossed.
+
+! Missing $ inserted.
+<inserted text> 
+                $
+<to be read again> 
+                   \par 
+l.53 
+     
+I've inserted a begin-math/end-math symbol since I think
+you left one out. Proceed, with fingers crossed.
+
+! Missing $ inserted.
+<inserted text> 
+                $
+<to be read again> 
+                   _
+l.70   header = mfitsio_
+                        read_header (filename);
+I've inserted a begin-math/end-math symbol since I think
+you left one out. Proceed, with fingers crossed.
+
+! Missing $ inserted.
+<inserted text> 
+                $
+<to be read again> 
+                   \par 
+l.80 
+     
+I've inserted a begin-math/end-math symbol since I think
+you left one out. Proceed, with fingers crossed.
+
+
+Overfull \hbox (316.17244pt too wide) in paragraph at lines 70--80
+[]\tenrm header = mfitsio$[]\teni ead[]eader\tenrm (\teni filename\tenrm ); \te
+ni if\tenrm (\teni header\tenrm ! = 0)[]\teni else[]$ |
+
+\hbox(7.5+2.86108)x469.75499, glue set - 1.0
+.\hbox(0.0+0.0)x20.0
+.\tenrm h
+.\tenrm e
+.\tenrm a
+.\tenrm d
+.etc.
+
+
+! Interruption.
+l.1539885 
+          
+? ^^X
+Type <return> to proceed, S to scroll future error messages,
+R to run without stopping, Q to run quietly,
+I to insert something, E to edit your file,
+H for help, X to quit.
+? X
+No pages of output.
