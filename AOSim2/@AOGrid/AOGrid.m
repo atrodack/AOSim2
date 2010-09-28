@@ -65,6 +65,11 @@ classdef AOGrid < handle
     methods
         %% Constructors
         function obj = AOGrid(nxy)
+            % function obj = AOGrid(nxy)
+            % This is the basic AOGrid contructor.
+            % The argument can be a pixel size (single number is square)
+            % or it can be another AOGrid in which case it is used as a
+            % template.  In that case no data is copied, just dimensions.
             if(nargin==0)
                 obj.grid_ = zeros(obj.defaultSize);
             else

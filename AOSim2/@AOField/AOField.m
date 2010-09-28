@@ -11,8 +11,8 @@ classdef AOField < AOGrid
 		JBAND = 1.215e-6;
 		HBAND = 1.654e-6;
 		KBAND = 2.179e-6;
-		LBAND = 3.8e-6;
-        MBAND = 4.769e-6;
+        LBAND = 3.8e-6;
+		MBAND = 4.769e-6;
 		NBAND = 10.472e-6;
 		
 		Rayleigh_LGS = 532e-9;
