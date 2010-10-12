@@ -37,7 +37,8 @@ n0 = AOGrid.middlePixel(nx);
 X = [1-n0:nx-n0];
 
 if(strcmp(AOG.domain,AOGrid.DOMAIN_SPACE))		% x-space...
-    X = X * dx + ORIGIN(2) + AOG.Offset(2);
+%     X = X * dx + ORIGIN(2) + AOG.Offset(2);
+    X = X * dx + ORIGIN(2);
 else					% k-space...
     X = X * DK(2);			% k-space origin should always be zero.
 end
@@ -52,7 +53,8 @@ if(nargout>1)
     Y = [1-n0:ny-n0];
     
     if(strcmp(AOG.domain,AOGrid.DOMAIN_SPACE))		% x-space...
-        Y = Y * dy + ORIGIN(1) + AOG.Offset(1);
+%        Y = Y * dy + ORIGIN(1) + AOG.Offset(1);
+        Y = Y * dy + ORIGIN(1);
     else					% k-space...
         Y = Y * DK(1);			% k-space origin should always be zero.
     end
