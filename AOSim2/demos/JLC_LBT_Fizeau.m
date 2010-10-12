@@ -26,7 +26,7 @@ Fwfs.lambda = AOField.RBAND;
 Fscience = AOField(A); % start centered on the origin.
 Fscience.lambda = AOField.MBAND;
 
-Fcombined = AOField([23 23]./A.dx); % start centered on the origin.
+Fcombined = AOField([10 23]./A.dx); % start centered on the origin.
 Fcombined.lambda = Fscience.lambda;
 Fcombined.FFTSize = 2048;
 
@@ -148,7 +148,7 @@ for nt=1:length(TIMES)
     %     daspect([1 1 1]);
     %     axis xy;
     Fwfs.show;
-    title('Right WFS');
+    title('Right WFS'); 
     
     
     % Now the RIGHT science field while we have the DM set.
