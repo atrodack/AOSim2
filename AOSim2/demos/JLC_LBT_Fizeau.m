@@ -1,14 +1,17 @@
-gain = -1;
+gain = 0.5; % This is the AO gain.  Set to 0 for no AO.  
 
 dTHETA = 0.1;
 RING = 1.5;
 AR = 0.25;
 dAZ = pi/32;
-FOV = 2;
-% r0 = 0.2;
+
+FOV = .5;
+dFOV = .01;
+
+%  r0 = 0.2;
 
 NXPIX = 4;
-NYPIX = 3;
+NYPIX = 2;
 
 % make_the_LBTI_AO_jlc
 % make_the_MMT_AO_jlc
@@ -79,107 +82,153 @@ TIMES = -0.5:dt:0.5;
 
 CCD = 0;
 
-FOV = 2;
-dFOV = .01;
-
-ActsL = 0;
+ActsL = 0; % Initial values for the actuators.
 ActsR = 0;
 
 [x,y] = A.coords;
 
 for nt=1:length(TIMES)
-    frame = 0;
-    
+% for nt=1:5
     ATMO.time = TIMES(nt);
-    
     Fcombined.zero;
 
+    frame = 0;
+    clf;
+    
     %% Left eye AO and Science... (try not to compute DM twice) 
-    DM.setActs(ActsL);
     Fwfs.Offset = ALCenter; % Move to the proper location to pick up the phase
     Fwfs.planewave; % make sure to apply the planewave here to get the baseline phase.
     Fwfs*ATMO; % This now gets the atmo phase at the right place.
     Fwfs.Offset = Center; % move to the common location for analysys...
-    DM.setActs(ActsL); % This makes the DM OPD map too.  
+    DM.setActs(ActsL); % Set the DM to the last LEFT settings.  
     Fwfs*DM; % This makes the DM OPD map too.  
-    Fwfs.planewave*ATMO; % This now gets the atmo phase at the right place.
     Fwfs*A;
-    dActsL = RECON.RECONSTRUCTOR * WFS.sense(Fwfs).slopes; % save results for a while
+    slopesL = WFS.sense(Fwfs).slopes;
+    dActsL = RECON.RECONSTRUCTOR * slopesL; % save results for a while
+    ActsL = ActsL - gain*dActsL; % LEFT AO is ready for next time.
     
-    frame=frame+1;subplot(NYPIX,NXPIX,frame);
-    %     imagesc(x,y,Fscience.interferometer(1));
-    %     daspect([1 1 1]);
-    %     axis xy;
-    Fwfs.show;
+    frame=frame+1;subplot(NYPIX,NXPIX,1);
+    imagesc(x,y,Fscience.interferometer(1));
+    daspect([1 1 1]);
+    axis xy;
+    %Fwfs.show;
+    WFS.quiver;
+    setFoV(5);
     title('Left WFS');
     
-    % Now the LEFT science while we have the DM set.
+    % Now do the LEFT science while we have the DM set up.
     
     Fscience.Offset = ALCenter;
-    Fscience.planewave*ATMO;
+    Fscience.planewave*ATMO; % make sure to call planewave at the right place!
     Fscience.Offset = Center; % move to the common location for manipulation.
     Fscience*A*DM;
     Fscience.Offset = ALCenter; % move it back for adding to the combiner
     Fcombined + Fscience;
 
     % pictures...
-    frame=frame+1;subplot(NYPIX,NXPIX,frame);
+    frame=frame+1;subplot(NYPIX,NXPIX,3);
     %     imagesc(x,y,Fscience.interferometer(1));
     %     daspect([1 1 1]);
     %     axis xy;
     Fscience.show;
+    WFS.quiver(1); % the 1 overplots on the previous image.
     title('Left Science');
-    
-    ActsL = ActsL - gain*dActsL; % ready for next time.
-    
+        
     %% Right eye AO and Science... (try not to compute DM twice)
-    DM.setActs(ActsR);
+    
     Fwfs.Offset = ARCenter; % Move to the proper location to pick up the phase
     Fwfs.planewave; % make sure to apply the planewave here to get the baseline phase.
     Fwfs*ATMO; % This now gets the atmo phase at the right place.
-    Fwfs*DM.setActs(ActsR); % This makes the DM OPD map too.  
-    Fwfs.planewave*ATMO; % This now gets the atmo phase at the right place.
-    Fwfs.Offset = Center; % move to the common location for pupil, DM, and analysys...
+    Fwfs.Offset = Center; % move to the common location for analysys...
+    DM.setActs(ActsR); % set up the DM for the RIGHT side.
+    Fwfs*DM; % This makes the DM OPD map too.  
     Fwfs*A;
-    dActsR = RECON.RECONSTRUCTOR * WFS.sense(Fwfs).slopes; % save results for a while
+    slopesR = WFS.sense(Fwfs).slopes;
+    dActsR = RECON.RECONSTRUCTOR * slopesR; % save results for a while
+    ActsR = ActsR - gain*dActsR; % RIGHT AO is ready for next time.
     
-    frame=frame+1;subplot(NYPIX,NXPIX,frame);
-    %     imagesc(x,y,Fscience.interferometer(1));
-    %     daspect([1 1 1]);
-    %     axis xy;
-    Fwfs.show;
-    title('Right WFS'); 
+    frame=frame+1;subplot(NYPIX,NXPIX,2);
+    imagesc(x,y,Fscience.interferometer(1));
+    daspect([1 1 1]);
+    axis xy;
+    %Fwfs.show;
+    WFS.quiver;
+    setFoV(5);
+    title('Right WFS');
     
-    
-    % Now the RIGHT science field while we have the DM set.
+    % Now do the RIGHT science while we have the DM set up.
     
     Fscience.Offset = ARCenter;
-    Fscience.planewave*ATMO;
+    Fscience.planewave*ATMO; % make sure to call planewave at the right place!
     Fscience.Offset = Center; % move to the common location for manipulation.
     Fscience*A*DM;
     Fscience.Offset = ARCenter; % move it back for adding to the combiner
     Fcombined + Fscience;
 
-    ActsR = ActsR - gain*dActsR; % ready for next time.
-    
-    %% Display what's happening...
-    frame=frame+1;subplot(NYPIX,NXPIX,frame);
+    % pictures...
+    frame=frame+1;subplot(NYPIX,NXPIX,4);
     %     imagesc(x,y,Fscience.interferometer(1));
     %     daspect([1 1 1]);
     %     axis xy;
     Fscience.show;
+    WFS.quiver(1); % the 1 overplots on the previous image.
+    title('Left Science');
+
+%     DM.setActs(ActsR); % set up the DM for the RIGHT side.
+%     Fwfs.Offset = ARCenter; % Move to the proper location to pick up the phase
+%     Fwfs.planewave; % make sure to apply the planewave here to get the baseline phase.
+%     Fwfs*ATMO; % This now gets the atmo phase at the right place.
+%     Fwfs*DM.setActs(ActsR); % This makes the DM OPD map too.  
+%     Fwfs.Offset = Center; % move to the common location for pupil, DM, and analysys...
+%     Fwfs*A;
+%     slopesR = WFS.sense(Fwfs).slopes;
+%     dActsR = RECON.RECONSTRUCTOR * slopesR; % save results for a while
+%     
+%     frame=frame+1;subplot(NYPIX,NXPIX,2);
+%     %     imagesc(x,y,Fscience.interferometer(1));
+%     %     daspect([1 1 1]);
+%     %     axis xy;
+%     %Fwfs.show;
+%     WFS.quiver;
+%     title('Right WFS'); 
+%     
+%     % Now the RIGHT science field while we have the DM set.
+%     
+%     Fscience.Offset = ARCenter;
+%     Fscience.planewave*ATMO;
+%     Fscience.Offset = Center; % move to the common location for manipulation.
+%     Fscience*A*DM;
+%     Fscience.Offset = ARCenter; % move it back for adding to the combiner
+%     Fcombined + Fscience;
+% 
+%     ActsR = ActsR - gain*dActsR; % ready for next time.
+    
+    %% Display what's happening...
+    frame=frame+1;subplot(NYPIX,NXPIX,4);
+    %     imagesc(x,y,Fscience.interferometer(1));
+    %     daspect([1 1 1]);
+    %     axis xy;
+    Fscience.show;
+    WFS.quiver(1);
     title('Right Science');
+
     
-    frame=frame+1;subplot(NYPIX,NXPIX,frame);
-%     figure(2);
+    %% Beam combiner
+    
+    frame=NXPIX+1;
+    subplot(NYPIX,NXPIX,frame+[0 1]);
+    frame=frame+1; % I used 2 slots.
     Fcombined.show;
-%     figure(1);
-    frame=frame+1;subplot(NYPIX,NXPIX,frame);
-    PSF = Fscience.mkPSF(FOV,dFOV);
     
-    imagesc(log10(normalize(PSF)),[-3 0]); 
+    %% PSF
+    frame=frame+1;
+    subplot(NYPIX,NXPIX,frame);
+    [PSF,thx,thy] = Fcombined.mkPSF(FOV,dFOV);
+    
+    imagesc(thx,thy,log10(normalize(PSF)),[-3 0]); 
     daspect([1 1 1]);
     axis xy;
+    title(sprintf('Fizeau PSF: t=%.4g',ATMO.time));
     
     drawnow;
     
