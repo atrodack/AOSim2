@@ -27,6 +27,7 @@ LBT_Actuators = LBT_Actuators/12.84*D/2; % convert weird units to m.
 
 ALCenter = [0 -7.2085];
 ARCenter = [0  7.2085];
+Center = [0 0];
 
 % Start building the telescope...
 Seg = AOSegment;
@@ -53,7 +54,7 @@ Fscience.name = 'Science Field';
 Fscience.lambda = AOField.MBAND;
 
 Fcombined = AOField([20 20]./A.dx); % start centered on the origin.
-Fcombined.name = 'LBT Combined Beam'
+Fcombined.name = 'LBT Combined Beam';
 Fcombined + Fscience; Fcombined.show;
 
 %% This model uses a common DM.  We will keep the actuators outside in a vector.
@@ -76,8 +77,16 @@ A.show; WFS.quiver(1); drawnow; % Show them.
 %% Now for some real work.  Building the RECONSTRUCTOR...
 RECON = AOReconstructor(A,DM,WFS);
 
-% Now program this crazy thing.
+%% Now program this crazy thing.
 
 RECON.adhocProgram(1);
 RECON.show;
+
+% RECON.adhocProgram(1);
+% RECON.show;
+
+OWD = sqrt(MAX_MODES/pi);
+% RECON.program(D,6*sqrt(2)); % Use Fourier modes. OWD is ~6 lambda/D for programming.
+RECON.zprogram(D,12);  % program using Zernikes.
+RECON.rebuild(56).show;
 
