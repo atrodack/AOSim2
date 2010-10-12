@@ -1,20 +1,23 @@
 classdef AOGrid < handle
     % The main AOSim2 class.
     %
-	% This is more important than you think...
+    % This is more important than you think...
     % "x" is dim 2
     % "y" is dim 1
     % lowercase is 1D
     % uppercase is 2D.
+    % underscore means internal.
     %
-	% The only exception to this is the pupil coordinates in AOAperture.
-	% 
+    % The only exception to this is the pupil coordinates in AOAperture.
+    %
+    % Once you work with ij and xy long enough, you will want to scream.
+    %
     % 20090407: JLCodona
     % 20090415 JLCodona.  Added fft method and new fftgrid_ usage model.
-    % 20100514 JLCodona.  Added a coordinates caching scheme.    
+    % 20100514 JLCodona.  Added a coordinates caching scheme.
     
     %% Properties
-    properties(Constant=true, GetAccess='protected', SetAccess='private')
+    properties(Constant=true, GetAccess='protected')
         SECS_PER_RADIAN = 206265;
         
         DOMAIN_SPACE = 'x';
@@ -28,13 +31,13 @@ classdef AOGrid < handle
     properties(GetAccess='public',SetAccess='public')
         name;
         defaultSize = [1 1]; % size of the default grid.
-        FFTSize = 256*[1 1]; % recommended FFT size.
+        FFTSize = [0 0]; % Recommended FFT Size. [0 0] is the AOGrid size.
         Offset = [0 0];  % This is a user Offset to move the object.
-		% Offset differs from origin_ in that the latter is used to
-		% optimize storage, while Offset is a user control.
-		nanmap = 0;      % If when interpolating we get NaNs, this settable value is used to fill.
-		verbosity = 0;  % set this to >0 for info and intermediate plots. 
-	end
+        % Offset differs from origin_ in that the latter is used to
+        % optimize storage, while Offset is a user control.
+        nanmap = 0;      % If when interpolating we get NaNs, this settable value is used to fill.
+        verbosity = 0;  % set this to >0 for info and intermediate plots.
+    end
     
     %     properties(GetAccess = 'protected', SetAccess = 'protected')
     properties(GetAccess = 'public', SetAccess = 'protected')
@@ -58,7 +61,7 @@ classdef AOGrid < handle
         Yextremes = [];
         Nx_ = nan;
         Ny_ = nan;
-
+        
     end
     
     %% Methods
@@ -87,7 +90,7 @@ classdef AOGrid < handle
                     obj.spacing_ = nxy.spacing_;
                     obj.origin_ = nxy.origin_;
                     obj.AXIS_PIXEL = nxy.axisPixel;
-					obj.Offset = nxy.Offset;
+                    obj.Offset = nxy.Offset;
                 else
                     if(isscalar(nxy))
                         obj.grid_ = zeros(nxy,nxy);
@@ -116,6 +119,8 @@ classdef AOGrid < handle
         
         % NOTE: coords() is defined in an external file.
         function [X,Y] = COORDS(A,local)
+            % [X,Y] = COORDS(A,local)
+            % Returns the 2D coordinates of the grid A.
             if(nargin>1)
                 [x,y] = coords(A,local);
             else
@@ -142,18 +147,18 @@ classdef AOGrid < handle
                     %fprintf('<Using COORDS cached values.>\n');
                     return;
                 else
-%                     fprintf('<COORDS Cache failed values test. x(%g %g) y(%g %g)>\n',...
-%                         A.Xextremes,x([1 end]),A.Yextremes,y([1 end]));
+                    % fprintf('<COORDS Cache failed values test. x(%g %g) y(%g %g)>\n',...
+                    % A.Xextremes,x([1 end]),A.Yextremes,y([1 end]));
                 end
-            else    
-%                 fprintf('<COORDS Cache failed length test. x(%g %g) y(%g %g)>\n',...
-%                     A.Nx_,length(x),A.Ny_,length(y));
+            else
+                % fprintf('<COORDS Cache failed length test. x(%g %g) y(%g %g)>\n',...
+                % A.Nx_,length(x),A.Ny_,length(y));
             end
             % Try to speed this line up...
             %[X,Y] = meshgrid(x,y);
             % Note that coords returns row vectors
             
-            fprintf('<Computing mesh COORDS.>\n');
+            fprintf('DEBUG: Computing COORDS for %s <%s>\n',class(A),A.name);
             
             % Go ahead and compute it.
             X = ones(length(y),1)*x;
@@ -164,7 +169,7 @@ classdef AOGrid < handle
             A.Y_ = Y;
             A.Nx_ = length(x);
             A.Ny_ = length(y);
-
+            
             A.Xextremes = x([1 end]);
             A.Yextremes = y([1 end]);
         end
@@ -179,14 +184,14 @@ classdef AOGrid < handle
         
         function sz = size(obj)
             sz = size(obj.grid_);
-		end
-		
-		function sz = resize(obj,varargin)
+        end
+        
+        function sz = resize(obj,varargin)
             switch length(varargin)
                 case 0
                 case 1
                     arg = varargin{1};
-                    A.axis_ = AOGrid.AXIS_FACE;
+                    obj.axis_ = AOGrid.AXIS_FACE;
                     
                     if(isscalar(arg))
                         obj.grid_ = zeros([1 1]*arg);
@@ -197,7 +202,7 @@ classdef AOGrid < handle
                     obj.AXIS_PIXEL = AOGrid.middlePixel(size(obj.grid_));
                     
                 case 2
-                    A.axis_ = AOGrid.AXIS_FACE;
+                    obj.axis_ = AOGrid.AXIS_FACE;
                     obj.grid_ = zeros([varargin{1} varargin{2}]);
                     obj.AXIS_PIXEL = AOGrid.middlePixel(size(obj.grid_));
                     
@@ -207,9 +212,9 @@ classdef AOGrid < handle
             
             sz = size(obj);
             obj.fftgrid_ = [];
-		end
-		
-		function o = origin(obj,varargin)
+        end
+        
+        function o = origin(obj,varargin)
             switch length(varargin)
                 case 0
                 case 1
@@ -233,13 +238,13 @@ classdef AOGrid < handle
         end
         
         function G = setBBox(G,BBox,pad)
-			% This makes a grid that is the size of the BBox and centered
-			% on it.
-			% BBox is [x1min, x2min; x1max, x2max];
-			% In other words...
-			% [ ymin  xmin
-			%   ymax  xmax ];            
-            midpoint = mean(BBox); 
+            % This makes a grid that is the size of the BBox and centered
+            % on it.
+            % BBox is [x1min, x2min; x1max, x2max];
+            % In other words...
+            % [ ymin  xmin
+            %   ymax  xmax ];
+            midpoint = mean(BBox);
             sides = BBox(2,:) - BBox(1,:);
             
             if(nargin>1)
@@ -253,17 +258,17 @@ classdef AOGrid < handle
         
         function n = nx(obj)
             n = size(obj.grid_,2);
-		end
-		
-		function n = ny(obj)
+        end
+        
+        function n = ny(obj)
             n = size(obj.grid_,1);
         end
         
         function val = dx(obj)
             val = obj.spacing_(2);
-		end
-		
-		function val = dy(obj)
+        end
+        
+        function val = dy(obj)
             val = obj.spacing_(1);
         end
         
@@ -288,21 +293,21 @@ classdef AOGrid < handle
             end
             
             s = obj.spacing_;
-		end
-		
-		function D = extent(obj)
+        end
+        
+        function D = extent(obj)
             D = size(obj.grid_) .* obj.spacing_;
-		end
-		
-		function G = centerOn(G,C)
-			if(~isa(C,'AOGrid'))
-				error('I can only center an AOGrid object on another AOGrid object.');
-			end
-			
-			G.Offset = C.Offset;
-		end
-		
-		function DK = dk_(obj)
+        end
+        
+        function G = centerOn(G,C)
+            if(~isa(C,'AOGrid'))
+                error('I can only center an AOGrid object on another AOGrid object.');
+            end
+            
+            G.Offset = C.Offset;
+        end
+        
+        function DK = dk_(obj)
             DK = 2*pi./(size(obj.grid_) .* obj.spacing_);
         end
         
@@ -346,9 +351,9 @@ classdef AOGrid < handle
             
             A.axis_ = AOGrid.AXIS_FACE;
             A.AXIS_PIXEL = AOGrid.middlePixel(size(A.grid_));
-		end
-		
-		function A = corner(A)
+        end
+        
+        function A = corner(A)
             % CORNER: Center the grid on the 'corner' [1 1] pixel.
             %
             % usage: corner(AOGrid)
@@ -377,6 +382,16 @@ classdef AOGrid < handle
         
         function g = tX(g)
             % TRANSFORMX: Fourier transform an AOGrid into x-space.
+            % DEPRECATED.  This is part of AOSim(1).  It is essentially
+            % meaningless now.
+            % AOGrids are always in the x-domain and always "centered".
+            % Centering means that the origin or reference point is in the
+            % interior of the array, not at the (1,1) corner as is a fresh
+            % FFT result.
+            % I still keep this because it is in some of the AOSim(1) code.
+            % *YOU* shouldn't need it.  
+            
+            % warning('AOGrid:DEPRECATED','Try to keep it in the x domain');
             if(strcmp(g.domain,AOGrid.DOMAIN_SPACE))
                 return;
             end
@@ -387,9 +402,15 @@ classdef AOGrid < handle
             
             g = center(g);
             g.fftgrid_ = [];
-		end
-		
-		function g = tK(g)
+        end
+        
+        function g = tK(g)
+            % DEPRECATED.  This is part of AOSim(1).  It is essentially
+            % meaningless now.
+            % AOGrids are always in the x-domain and always "centered".
+            % Centering means that the origin or reference point is in the
+            % interior of the array, not at the (1,1) corner as is a fresh
+            % FFT result.
             warning('AOGrid:DEPRECATED','Try to keep it in the x domain');
             % TRANSFORMK: Fourier transform an AOGrid into k-space.
             if(strcmp(g.domain,AOGrid.DOMAIN_FREQ))
@@ -402,108 +423,165 @@ classdef AOGrid < handle
             
             g = center(g);
             g.fftgrid_ = [];
-		end
+        end
         
-		function g = checkFFTSize(g,FFTSize)
-			% keepin' it square.  Complaints to JLC.
-			FFTSize = max(FFTSize)*[1 1]; 
-			
-			Ngrid = max(size(g));
-			Nfft = max(g.FFTSize);
-			
-			if(Ngrid > Nfft)
-				FFTSize = 2^ceil(log2(Ngrid));
-				g.FFTSize = FFTSize*[1 1];
-			end
-		end
-		
-        function fgrid = fft(g,FFTSize)
-            % Performs FFT and returns complex grid.
-            % This does not alter the grid_ if in x domain.
-            % It caches the result or returns the cached result.
-            % Use kcoords and KCOORDS to get the FFT dims.
-            % Wavelength-dependent coords like theta are defined in
-            % AOField.
-            % NOTES: The fftgrid_ is ALWAYS centered.
-            % 20090415 JLCodona.
+        function g = checkFFTSize(g)
+            % make sure FFTSize makes sense.
             
-			if(nargin>1)
-				FFTSize = max(FFTSize)*[1 1]; % keepin' it square.  Complaints to JLC.
-
-                if(g.FFTSize ~= FFTSize)
-                    g.fftgrid_ = [];
-				end
-                
-                if(length(FFTSize)>1)
-                    g.FFTSize = FFTSize;
-                else
-                    g.FFTSize = FFTSize*[1 1];
-				end
-				
-			g.checkFFTSize(FFTSize);
-			
-			else
-				g.checkFFTSize(1);
-			end
-
-            if(isK(g))
-                g.tX;
+            if(isscalar(g.FFTSize)) % only one dim specified.
+                g.FFTSize = g.FFTSize(1)*[1 1]; % Canonical 2D grid.
             end
             
-			if(isempty(g.fftgrid_))
-				%fprintf('DEBUG: Computing FFT and cacheing result.\n');
-				
-				g.center(); % prepare to pad.
-				gpad = padarray(g.grid,g.FFTSize-g.size,'post');
-				gpad = circshift(gpad,1-g.axisPixel);
-				% Do our own padding to efficiently control phase tilt.
-				g.fftgrid_ = ifft2(gpad)*(prod(g.spacing)*prod(g.FFTSize));
-				% g.fftgrid_ = ifft2(g.grid(),g.FFTSize(1),g.FFTSize(2))...
-				%    *(prod(g.spacing)*prod(g.FFTSize));
-				
-				for dim=1:2
-					g.fftgrid_ = ifftshift(g.fftgrid_,dim);
-				end
-				g.FAXIS_PIXEL = AOGrid.middlePixel(size(g.fftgrid_));
-				%             else
-				%fprintf('DEBUG: Returning cached FFT result.\n');
-			end
-			
-			fgrid = g.fftgrid_;
-		end
-		
-		% This returns the value for the current FFTSize.
-        function DK = dk(obj)
-            DK = 2*pi./(obj.FFTSize .* obj.spacing_);
-		end
-		
-		function [kx,ky] = kcoords(A)
-            SZ = A.FFTSize;
-            CEN = A.FAXIS_PIXEL;
+            % Replace any 0 sizes with the actual grid size.
+            SZ = g.size();
+            DEFAULT = (g.FFTSize==0);
+            g.FFTSize(DEFAULT) = SZ(DEFAULT);
+            % there should no longer be any zeros in FFTSize.
+        end
+        
+        function fgrid = fft(g,FFTSize)
+            % Performs an FFT and returns the complex grid.
+            %
+            % This does not alter the grid_.
+            % It caches the result in fftgrid_ or returns the cached result.
+            %
+            % Use kcoords and KCOORDS to get the spatial freq coordinates for fftgrid_.
+            % Wavelength-dependent coords like theta are defined in AOField.
+            %
+            %NOTE BENE: The fftgrid_ is ALWAYS centered.
+            %
+            % If FFTSize is 0 then just use the native size of the AOGrid.
+            %
+            % Note: Use AOField.mkHalo to interpolate into the fftgrid_ array.
+            % The coords there are unrelated to these, they are simply
+            % angle (n.b. wavelength-dependent) for the returned image.
+            % kcoords returns k-space coords for the extended (or
+            % truncated) grid according to FFTSize.  Be careful.
+            %
+            % Conditions for (re)computing the FFT:
+            % (a) if the fftgrid_ is empty.
+            % (b) if fftgrid_ is not the same size as FFTSize.
+            % (c) The AOGrid has been touched.
+            %
+            % otherwise just return the cached fftgrid_.
+            
+            %%
+            if(nargin>1) % A new FFTSize was specified.
+                g.FFTSize = FFTSize;
+            end
+            
+            if(isscalar(g.FFTSize)) % only one dim specified.
+                g.FFTSize = g.FFTSize(1)*[1 1]; % Canonical 2D grid.
+            end
+            
+            g.checkFFTSize;
+            
+            if(sum(g.FFTSize~=size(g.fftgrid_))) % differs from the old size setting.  Clear cache.
+                g.fftgrid_ = []; % Clear FFT cache
+            end
+            
+            %% DO THE FFT
+            if(isempty(g.fftgrid_)) % cache is cleared. RECOMPUTE FFT.
+                fprintf('DEBUG: Computing FFT and caching result.\n');
+                
+                g.FAXIS_PIXEL = AOGrid.middlePixel(g.FFTSize);
+                
+                % Each part does the fft and centers it.
+                if(prod(double(g.FFTSize==g.size()))) % FFTSize IS the AOGrid size
+                    g.fftgrid_ = circshift(...
+                        fft2(circshift(g.grid_,1-g.AXIS_PIXEL)),...
+                        g.FAXIS_PIXEL-1);
+                else % FFTSize is NOT the AOGrid size
+                    
+                    if(sum(g.FFTSize>g.size())==2)
+                        % the requested size is larger than the grid in both dims
+                        g.fftgrid_ = padarray(g.grid(),g.FFTSize-g.size(),'post');
+                        g.fftgrid_ = circshift(...
+                            fft2(circshift(g.fftgrid_,1-g.AXIS_PIXEL)),...
+                            g.FAXIS_PIXEL-1);
+                    else %one or both dims are smaller than the grid
+                        
+                        % JLC 20101008: This code is probably not very efficient.
+                        % I'm hoping it doesn't get used very often.
+                        % Please feel free to contribute better code.
+                        
+                        DX = g.spacing;
+                        
+                        x1_ = 1:g.FFTSize(1);
+                        x1_ = fftshift(x1_); % this takes care of special cases.
+                        x1_ = (x1_-x1_(1))*DX(1);
+                        
+                        x2_ = 1:g.FFTSize(2);
+                        x2_ = fftshift(x2_); % this takes care of special cases.
+                        x2_ = (x2_-x2_(2))*DX(2);
+                        
+                        [X1_,X2_] = meshgrid(x1_,x2_);
+                        
+                        g.fftgrid_ = g.interpGrid(X2_,X1_); % backwards? forwards? BUG CHECK
+                        g.fftgrid_(isnan(g.fftgrid_)) = 0; % inefficient zero-padding
+                        
+                        g.fftgrid_ = circshift(fft2(g.fftgrid_),g.FAXIS_PIXEL-1);
+                    end 
+                end                
+            else
+                fprintf('DEBUG: Returning cached FFT result.\n');
+            end
+            
+            fgrid = g.fftgrid_;
+        end
+        
+        function DK = dk(g)
+            % DK = dk(g):
+            % This returns the fftgrid_ pixel sizes for the current FFTSize.
+            % This is based on FFTSize, not the size of the currently allocated
+            % AOGrid.fftgrid_.  Take note.
+            
+            g.checkFFTSize;
+            
+            DK = 2*pi./(g.FFTSize .* g.spacing_);
+        end
+        
+        function [kx,ky] = kcoords(A)
+            % This computes the coordinates of fftgrid_.
+            % This is based on FFTSize, not the size of the currently allocated
+            % AOGrid.fftgrid_.  Take note.
+            % If the fftgrid_ hasn't been allocated, this routine will just
+            % use FFTSize.  The pixel size is based on the FFTSize and the
+            % pixel sizes in the space domain.  It's possible for the
+            % fftgrid_ to not exist when this is computed, since it doesn't
+            % get allocated until a request for an fft has been generated.
+            % This should be okay, just make sure you call fft BEFORE you
+            % expect there to be an answer in fftgrid_!
+
+            A.checkFFTSize;
+            SZ = A.FFTSize; 
+            CEN = AOGrid.middlePixel(SZ);
+            A.FAXIS_PIXEL = CEN;
+            
             dk = A.dk;
             
-            kx = ((1-CEN(1)):(SZ(1)-CEN(1)))*dk(1);
-            ky = ((1-CEN(2)):(SZ(2)-CEN(2)))*dk(2);
-		end
-		
-		function [KX,KY] = KCOORDS(A)
+            kx = ((1:SZ(1))-CEN(1))*dk(1);
+            ky = ((1:SZ(2))-CEN(2))*dk(2);
+        end
+        
+        function [KX,KY] = KCOORDS(A)
             [kx,ky] = kcoords(A);
             [KX,KY] = meshgrid(kx,ky);
-		end
-		
-		function A = zero(A)
+        end
+        
+        function A = zero(A)
             % ZERO: Set an AOGrid to zero.
             A.grid_ = zeros(A.size);
             A.fftgrid_ = [];
-		end
-		
-		function A = constant(A,val)
+        end
+        
+        function A = constant(A,val)
             % ZERO: Set an AOGrid to zero.
             A.grid_(:,:) = val;
             A.fftgrid_ = [];
-		end
-		
-		function A = zeroNaNs(A)
+        end
+        
+        function A = zeroNaNs(A)
             % ZERONANS: Set bad values to zero.
             A.grid_(isnan(A.grid_)) = 0;
             A.fftgrid_ = [];
@@ -519,9 +597,9 @@ classdef AOGrid < handle
             else
                 g = real(A.grid_);
             end
-		end
-		
-		function g = imag(A)
+        end
+        
+        function g = imag(A)
             % See real() method.
             if(nargout<1)
                 A.grid_ = imag(A.grid_);
@@ -529,27 +607,27 @@ classdef AOGrid < handle
             else
                 g = imag(A.grid_);
             end
-		end
-		
-		function g = phase(A)
+        end
+        
+        function g = phase(A)
             if(nargout<1)
                 A.grid_ = angle(A.grid_);
                 A.fftgrid_ = [];
             else
                 g = angle(A.grid_);
             end
-		end
-		
-		function g = abs(A)
+        end
+        
+        function g = abs(A)
             if(nargout<1)
                 A.grid_ = abs(A.grid_);
                 A.fftgrid_ = [];
             else
                 g = abs(A.grid_);
             end
-		end
-		
-		function g = mag2(A)
+        end
+        
+        function g = mag2(A)
             if(nargout<1)
                 A.grid_ = (A.grid_).*conj(A.grid_);
                 A.fftgrid_ = [];
@@ -561,43 +639,43 @@ classdef AOGrid < handle
         
         function dex = dex(A)
             dex = log10(abs(A.grid_).^2);
-		end
-		
-		function dex = ndex(A)
+        end
+        
+        function dex = ndex(A)
             dex = abs(A.grid_).^2;
             dex = log10(dex/max(dex(:)));
         end
         
         function m = mean(A)
             m = mean(A.grid_(:));
-		end
-		
-		function v = var(A)
+        end
+        
+        function v = var(A)
             v = var(A.grid_(:));
-		end
-		
-		function s = std(A)
+        end
+        
+        function s = std(A)
             s = std(A.grid_(:));
         end
         
         function b = isX(G)
             b=(strcmp(G.domain_,AOGrid.DOMAIN_SPACE)==1);
-		end
-		
-		function b = isK(G)
+        end
+        
+        function b = isK(G)
             b=(strcmp(G.domain_,AOGrid.DOMAIN_FREQ)==1);
-		end
-		
-		function b = isCentered(G)
+        end
+        
+        function b = isCentered(G)
             b=(strcmp(G.axis_,AOGrid.AXIS_FACE)==1);
-		end
-		
-		function yn = isCommensurate(a,b)
+        end
+        
+        function yn = isCommensurate(a,b)
             yn = false;
             
             if(strcmp(a.domain,b.domain)~=1)
                 warning('AOGrid:DOMAIN','mismatched domains.');
-				yn = false;
+                yn = false;
                 return;
             end
             
@@ -609,42 +687,42 @@ classdef AOGrid < handle
                 b.center;
             end
             
-%             %if(size(a)~=size(b))
-%             if(AOGrid.differ(size(a),size(b)))
-%                 return;
-%             end
-%             
-%             %if(spacing(a)~=spacing(b))
-%             if(AOGrid.differ(spacing(a),spacing(b)))
-%                 return;
-%             end
-%             
-%             %if(origin(a)~=origin(b))
-%             if(differ(origin(a),origin(b)))
-%                 return;
-%             end
-%             
-%             %if(a.Offset~=b.Offset)
-%             if(differ(a.Offset,b.Offset))
-%                 return;
-%             end
-
-                        %if(size(a)~=size(b))
+            %             %if(size(a)~=size(b))
+            %             if(AOGrid.differ(size(a),size(b)))
+            %                 return;
+            %             end
+            %
+            %             %if(spacing(a)~=spacing(b))
+            %             if(AOGrid.differ(spacing(a),spacing(b)))
+            %                 return;
+            %             end
+            %
+            %             %if(origin(a)~=origin(b))
+            %             if(differ(origin(a),origin(b)))
+            %                 return;
+            %             end
+            %
+            %             %if(a.Offset~=b.Offset)
+            %             if(differ(a.Offset,b.Offset))
+            %                 return;
+            %             end
+            
+            %if(size(a)~=size(b))
             if( AOGrid.differ(size(a),size(b)) || ...
-                AOGrid.differ(spacing(a),spacing(b)) || ...
-                AOGrid.differ(origin(a),origin(b)) || ...
-                AOGrid.differ(a.Offset,b.Offset) )
-    			yn = false;
-            else        
-    			yn = true;
+                    AOGrid.differ(spacing(a),spacing(b)) || ...
+                    AOGrid.differ(origin(a),origin(b)) || ...
+                    AOGrid.differ(a.Offset,b.Offset) )
+                yn = false;
+            else
+                yn = true;
             end
         end
         
         function sgrid = subGrid(G,y,x)
             sgrid = G.grid_(y,x);
-		end
-		
-		function G = setPixel(G,n1,n2,value)
+        end
+        
+        function G = setPixel(G,n1,n2,value)
             G.grid_(n1,n2) = value;
         end
         
@@ -681,14 +759,14 @@ classdef AOGrid < handle
             if(isreal(g))
                 % 				I = abs(g).^2;
                 
-                minI = min(g(:));
-                maxI = max(g(:));
+                %minI = min(g(:));
+                %maxI = max(g(:));
                 
                 [x,y] = coords(G);
                 
                 imagesc(x,y,g);
                 axis square;
-				axis xy;
+                axis xy;
                 colorbar;
             else
                 I = abs(g).^2;
@@ -713,22 +791,22 @@ classdef AOGrid < handle
                 
                 imagesc(x,y,RGB,[0 1]);
                 axis square;
-				axis xy;
+                axis xy;
             end
-		end
-		
-		% Compute the gradient of the grid.
-		% Note that the first element of the answer is dZdx.
-		% delZ = [dZ/dx,dZ/dy].
-		% Sorry for the confusion, but this is not simply compatable with
-		% MATLAB. JLC. 20091005
-		% TODO: Error handling!
-		function delZ = del(G)
-			dxy = G.spacing;
-			%Z = G.grid;
-			[Zx,Zy] = gradient(G.grid_);
-			delZ = [Zx/dxy(1),Zy/dxy(2)];
-		end
+        end
+        
+        % Compute the gradient of the grid.
+        % Note that the first element of the answer is dZdx.
+        % delZ = [dZ/dx,dZ/dy].
+        % Sorry for the confusion, but this is not simply compatable with
+        % MATLAB. JLC. 20091005
+        % TODO: Error handling!
+        function delZ = del(G)
+            dxy = G.spacing;
+            %Z = G.grid;
+            [Zx,Zy] = gradient(G.grid_);
+            delZ = [Zx/dxy(1),Zy/dxy(2)];
+        end
         
         %% Overloaded operators.
         function a = plus(a,b)
@@ -788,9 +866,9 @@ classdef AOGrid < handle
         function a = mtimes(a,b)
             if(~isa(a,'AOGrid'))
                 error('operator call is not in canonical form.');
-			end
-			
-			if(isnumeric(b))
+            end
+            
+            if(isnumeric(b))
                 % fprintf('AOGrid scalar product.\n');
                 a.grid_ = a.grid_ * b;
                 a.fftgrid_ = [];
@@ -824,11 +902,11 @@ classdef AOGrid < handle
             
             yn = prod(double(mat1(:)==mat2(:)))==0;
             
-%             if(prod(double(mat1(:)==mat2(:))))
-%                 yn = false;
-%             else
-%                 yn = true;
-%             end
+            %             if(prod(double(mat1(:)==mat2(:))))
+            %                 yn = false;
+            %             else
+            %                 yn = true;
+            %             end
             
         end
         

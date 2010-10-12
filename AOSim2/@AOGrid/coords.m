@@ -24,9 +24,9 @@ function [X,Y] = coords(AOG,local)
 % 20090417 JLCodona: Added Offset support for segmented pupils.
 
 if(nargin>1 && local)
-	ORIGIN = AOG.origin();  % ALWAYS include the origin.
+    ORIGIN = AOG.origin();  % ALWAYS include the origin.
 else
-	ORIGIN = AOG.origin() + AOG.Offset;
+    ORIGIN = AOG.origin() + AOG.Offset;
 end
 
 nx = AOG.nx; ny = AOG.ny;
@@ -37,30 +37,30 @@ n0 = AOGrid.middlePixel(nx);
 X = [1-n0:nx-n0];
 
 if(strcmp(AOG.domain,AOGrid.DOMAIN_SPACE))		% x-space...
-	X = X * dx + ORIGIN(2);
+    X = X * dx + ORIGIN(2) + AOG.Offset(2);
 else					% k-space...
-	X = X * DK(2);			% k-space origin should always be zero.
+    X = X * DK(2);			% k-space origin should always be zero.
 end
 
 if(strcmp(AOG.axis,AOGrid.AXIS_CORNER))
-	X = ifftshift(X);
+    X = ifftshift(X);
 end
 
 %% Y (dim 1)
 if(nargout>1)
-	n0 = midp(ny);
-	Y = [1-n0:ny-n0];
-	
-	if(strcmp(AOG.domain,AOGrid.DOMAIN_SPACE))		% x-space...
-		Y = Y * dy + ORIGIN(1);
-	else					% k-space...
-		Y = Y * DK(1);			% k-space origin should always be zero.
-	end
-	
-	if(strcmp(AOG.axis,AOGrid.AXIS_CORNER))
-		Y = ifftshift(Y);
-	end
-	
+    n0 = midp(ny);
+    Y = [1-n0:ny-n0];
+    
+    if(strcmp(AOG.domain,AOGrid.DOMAIN_SPACE))		% x-space...
+        Y = Y * dy + ORIGIN(1) + AOG.Offset(1);
+    else					% k-space...
+        Y = Y * DK(1);			% k-space origin should always be zero.
+    end
+    
+    if(strcmp(AOG.axis,AOGrid.AXIS_CORNER))
+        Y = ifftshift(Y);
+    end
+    
 end
 
 end
@@ -73,9 +73,9 @@ end
 
 function org = midp(n)
 if(isodd(n))
-	org = (n-1)/2+1;
+    org = (n-1)/2+1;
 else
-	org = n/2+1;
+    org = n/2+1;
 end
 
 end

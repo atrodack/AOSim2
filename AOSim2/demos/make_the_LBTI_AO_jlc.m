@@ -18,18 +18,21 @@
 % in the MMT reconstructor design.  All roads lead back to GUIDO BRUSA!
 MAX_MODES = 56;
 
-load data/PMMT.mat
-load data/MMT_DM336_Actuators.mat
+load data/PLBT_oneEye.mat
+load data/LBT_actuators_plusCenter.mat
+LBT_Actuators(end,:) = [];
+LBT_Actuators = LBT_Actuators/12.84*8.4/2;
+
 
 Seg = AOSegment;
-Seg.name = 'MMT Primary';
-Seg.pupils = PMMT;
+Seg.name = 'LBT Segment';
+Seg.pupils = PLBT;
 Seg.make;
 
 clf;
 % Seg.touch.make.show;
 A = AOAperture;
-A.name = 'MMT';
+A.name = 'LBT';
 A.addSegment(Seg);
 A.show;
 colormap(gray);
@@ -41,7 +44,7 @@ load data/MMT_DM336_Actuators.mat ACT BAD
 
 %% Make a DM with an OPD grid matched to the Aperture A...
 DM = AODM(A);
-DM.name = 'MMT DM336';
+DM.name = 'LBT DM672';
 
 %% Add in the actuators.
 DM.addActs(ACT*6.5/2,1,A);

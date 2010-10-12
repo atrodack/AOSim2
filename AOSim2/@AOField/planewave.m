@@ -52,6 +52,6 @@ else  % OFF AXIS
 	kappax = k*thx;
 	kappay = k*thy;
 	
-	F.grid_ = amplitude .* exp(-i.*(kappax.*X+kappay.*Y));
+	F.grid_ = amplitude .* exp(-1i.*(kappax.*X+kappay.*Y));
 end
 
