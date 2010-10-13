@@ -1,4 +1,4 @@
-gain = 0.5; % This is the AO gain.  Set to 0 for no AO.  
+gain = 0.; % This is the AO gain.  Set to 0 for no AO.  
 
 dTHETA = 0.1;
 RING = 1.5;
@@ -32,6 +32,7 @@ Fscience.lambda = AOField.MBAND;
 Fcombined = AOField([10 23]./A.dx); % start centered on the origin.
 Fcombined.lambda = Fscience.lambda;
 Fcombined.FFTSize = 2048;
+
 
 %% Define the Atmosphere model and winds aloft.
 ATMO = AOAtmo(A);
@@ -80,6 +81,11 @@ ATMO.BEACON = GUIDE_STAR; % Set this so ATMO knows how to compute the wavefront.
 dt = 1e-3;
 TIMES = -0.5:dt:0.5;
 
+EXPOSURE = 25;
+
+[PSF,thx,thy] = Fcombined.mkPSF(FOV,dFOV);
+CUBE = zeros([size(PSF) floor(length(TIMES)/EXPOSURE)]);
+
 CCD = 0;
 
 ActsL = 0; % Initial values for the actuators.
@@ -87,11 +93,13 @@ ActsR = 0;
 
 [x,y] = A.coords;
 
+CCD = 0;
+nExp = 1;
 for nt=1:length(TIMES)
 % for nt=1:5
     ATMO.time = TIMES(nt);
-    Fcombined.zero;
-
+    Fcombined.zero;    
+    
     frame = 0;
     clf;
     
@@ -225,12 +233,26 @@ for nt=1:length(TIMES)
     subplot(NYPIX,NXPIX,frame);
     [PSF,thx,thy] = Fcombined.mkPSF(FOV,dFOV);
     
-    imagesc(thx,thy,log10(normalize(PSF)),[-3 0]); 
+    CCD = CCD + PSF;
+    %imagesc(thx,thy,log10(normalize(PSF)),[-3 0]); 
+    imagesc(thx,thy,log10(normalize(CCD)),[-3 0]); 
     daspect([1 1 1]);
     axis xy;
     title(sprintf('Fizeau PSF: t=%.4g',ATMO.time));
     
     drawnow;
+    
+    if(mod(nt,EXPOSURE)==0)
+        CUBE(:,:,nExp) = CCD;
+        HEADER = struct();
+        HEADER.GOPDATE = GOPdate;
+        HEADER.AO_WFS = dt;
+        HEADER.EXPOSURE = EXPOSURE;
+        HEADER.nExp = nExp;
+        nExp = nExp + 1;
+        CCD = 0;
+        fits_write_image('LBT_FIZEAU.fits',CUBE,HEADER);
+    end
     
 end
 
