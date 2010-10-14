@@ -13,7 +13,7 @@ NYPIX = 1;
 %% Define the extended source as a set of point sources.
 RING = 0.3; % radius of the circumstellar ring
 OBJ2STAR = 1.0;
-NSOURCE = 8;
+NSOURCE = 16;
 PA = 60/360*2*pi;
 
 AR = 0.25;
