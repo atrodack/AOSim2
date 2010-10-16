@@ -158,7 +158,7 @@ classdef AOGrid < handle
             %[X,Y] = meshgrid(x,y);
             % Note that coords returns row vectors
             
-            fprintf('DEBUG: Computing COORDS for %s <%s>\n',class(A),A.name);
+            %fprintf('DEBUG: Computing COORDS for %s <%s>\n',class(A),A.name);
             
             % Go ahead and compute it.
             X = ones(length(y),1)*x;
@@ -482,7 +482,7 @@ classdef AOGrid < handle
             
             %% DO THE FFT
             if(isempty(g.fftgrid_)) % cache is cleared. RECOMPUTE FFT.
-                fprintf('DEBUG: Computing FFT and caching result.\n');
+                %fprintf('DEBUG: Computing FFT and caching result.\n');
                 
                 g.FAXIS_PIXEL = AOGrid.middlePixel(g.FFTSize);
                 

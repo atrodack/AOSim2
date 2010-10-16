@@ -13,11 +13,11 @@ NYPIX = 1;
 %% Define the extended source as a set of point sources.
 RING = 0.3; % radius of the circumstellar ring
 OBJ2STAR = 1.0;
-NSOURCE = 0;
+NSOURCE = 25;
 PA = 60/360*2*pi;
 
 AR = 0.25;
-dAZ = 2*pi/NSOURCE;
+dAZ = 2*pi/(NSOURCE+eps);
 AZS=0:dAZ:(2*pi-1e-3);
 
 THETAS = [0 0];
@@ -62,7 +62,7 @@ Fwfs.lambda = AOField.RBAND;
 Fscience = AOField(A); % start centered on the origin.
 Fscience.lambda = AOField.MBAND;
 
-Fcombined = AOField([10 23]./A.dx); % start centered on the origin.
+Fcombined = AOField(A); % We just need a combining AOField the size of A.
 Fcombined.lambda = Fscience.lambda;
 Fcombined.FFTSize = 2048;
 
@@ -136,7 +136,7 @@ for nt=1:length(TIMES)
     
     %% AO Part (now separated from the science part so we can loop over science sub-sources.)
     
-    %% Left eye AO and Science... (try not to compute DM twice)
+    %% Left eye AO and Science... 
     Fwfs.Offset = ALCenter; % Move to the proper location to pick up the phase
     Fwfs.planewave; % make sure to apply the planewave here to get the baseline phase.
     Fwfs*ATMO; % This now gets the atmo phase at the right place.
@@ -217,41 +217,42 @@ for nt=1:length(TIMES)
         Fscience.Offset = Center; % move to the common location for manipulation.
         Fscience*A*DMR;
         Fscience.Offset = ARCenter; % move it back for adding to the combiner
-        Fcombined + Fscience;
+        
+        % This would be easier if we had a "-" operator defined.
+        Fcombined + Fscience.grid(-Fscience.grid);
         
         % pictures...
-%         frame=frame+1;
-%         subplot(NYPIX,NXPIX,4);
-        %     imagesc(x,y,Fscience.interferometer(1));
-        %     daspect([1 1 1]);
-        %     axis xy;
-%         Fscience.show;
-%         WFS.quiver(1); % the 1 overplots on the previous image.
-%         title('Left Science');
+        % frame=frame+1;
+        % subplot(NYPIX,NXPIX,4);
+        % imagesc(x,y,Fscience.interferometer(1));
+        % daspect([1 1 1]);
+        % axis xy;
+        % Fscience.show;
+        % WFS.quiver(1); % the 1 overplots on the previous image.
+        % title('Left Science');
 
         %% Display what's happening...
-%         frame=frame+1;
-%         subplot(NYPIX,NXPIX,4);
-        %     imagesc(x,y,Fscience.interferometer(1));
-        %     daspect([1 1 1]);
-        %     axis xy;
-%         Fscience.show;
-%         WFS.quiver(1);
-%         title('Right Science');
+        % frame=frame+1;
+        % subplot(NYPIX,NXPIX,4);
+        % imagesc(x,y,Fscience.interferometer(1));
+        % daspect([1 1 1]);
+        % axis xy;
+        % Fscience.show;
+        % WFS.quiver(1);
+        % title('Right Science');
         
         %% Beam combiner
         
-%         frame=NXPIX+1;
-%         subplot(NYPIX,NXPIX,frame+[0 1]);
-%         frame=frame+1; % I used 2 slots.
-%         Fcombined.show;
-        
+        % frame=NXPIX+1;
+        % subplot(NYPIX,NXPIX,frame+[0 1]);
+        % frame=frame+1; % I used 2 slots.
+        % Fcombined.show;
         
         %% PSF
         [PSF,thx,thy] = Fcombined.mkPSF(FOV,dFOV);
         IMAGE = IMAGE + PSF;
         
-%         drawnow;
+        % drawnow;
     end % n star loop... produces IMAGE
     
     CCD = CCD + IMAGE;
@@ -261,19 +262,20 @@ for nt=1:length(TIMES)
     imagesc(thx,thy,log10(normalize(IMAGE)),[-3 0]);
     daspect([1 1 1]);
     axis xy;
-    title('Fizeau Image');
+    title('Bracewell Image');
     
     frame=frame+1; subplot(NYPIX,NXPIX,frame);
     imagesc(thx,thy,log10(normalize(CCD)),[-3 0]);
     daspect([1 1 1]);
     axis xy;
-    title(sprintf('Fizeau Exposure: t=%.4g',ATMO.time));
+    title(sprintf('LBTI Exposure: t=%.4g',ATMO.time));
     drawnow;
     
     if(mod(nt,EXPOSURE)==0)
         CUBE(:,:,nExp) = CCD;
         HEADER = struct();
         HEADER.GOPDATE = GOPdate;
+        HEADING.LBTIMODE = 'Bracewell';
         HEADER.AO_WFS = dt;
         HEADER.EXPOSURE = EXPOSURE;
         HEADER.RING = RING;
@@ -283,7 +285,7 @@ for nt=1:length(TIMES)
         HEADER.nExp = nExp;
         nExp = nExp + 1;
         CCD = 0;
-        fits_write_image('LBT_FIZEAU_extended_withAO.fits',CUBE,HEADER);
+        fits_write_image('LBTI_ScienceImageCube.fits',CUBE(:,:,1:nExp),HEADER);
     end
     
 end % loop over time
