@@ -151,6 +151,7 @@ classdef AOScreen < AOGrid
         end
 
         function S = addZernike(S,n,m,amp,D,cenx,ceny)
+        % AOScreen S = S.addZernike(n,m,amp,D,cenx,ceny)
             if(nargin>4)
                 S.radius = D/2;
             end
@@ -168,7 +169,7 @@ classdef AOScreen < AOGrid
             y = (y-Xcen)/S.radius;
             zern = ZernikeStringR(n,m);
             S + amp*eval(zern);
-            touch(S);
+            %touch(S);
         end
 
 		function S = addDiskHarmonic(S,n,m,amp,D,cenx,ceny)

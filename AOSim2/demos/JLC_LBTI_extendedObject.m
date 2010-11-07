@@ -1,4 +1,4 @@
-gain = 1.0; % This is the AO gain.  Set to 0 for no AO.
+gain = 0.0; % This is the AO gain.  Set to 0 for no AO.
 
 dTHETA = 0.1;
 
