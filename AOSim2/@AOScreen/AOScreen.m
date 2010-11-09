@@ -30,7 +30,18 @@ classdef AOScreen < AOGrid
 	methods
 		% Constructors
 		function PS = AOScreen(varargin)
-			
+			% PS = AOScreen(size_defn,[r0],[reference wavelenth])
+            % This is the constructor.  It can take several arguments.
+            % size_defn can be another object, the AOScreen will be built
+            % to match it.
+            % It can be a single number whilch will be the size of a square
+            % grid with the default pixel size of 4cm.  This can all be
+            % changed later and the screen rerendered.
+            % The size_defn can be [n1 n2] and a non-square array will be
+            % rendered.
+            % r0 (optional, defaults to 15cm at VBAND) depends on a ref lambda, so you 
+            % may want to define that also.
+            
 			% (nxy,r0,lambda)
 			PS = PS@AOGrid(varargin{1});
 
