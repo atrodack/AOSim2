@@ -1,13 +1,14 @@
-function F = propagate(F,dz)
+function F = propagate(F,dz,REGULARIZE)
   
 % PROPAGATE: Propagate an AOField by the distance dz.
 % 
-% USAGE: F = propagate(F,dz)
+% USAGE: F = propagate(F,dz,REGULARIZE)
 % 
 % INPUTS:
 % F: The AOField to work on.
 % dz: The distance to propagate (m).
-%
+% REGULARIZE: and optional number to filter high angles.
+% 
 % OUTPUTS:
 % F: The modified AOField object.
 % 
@@ -16,38 +17,40 @@ function F = propagate(F,dz)
 % medium effects, you must call interact(F,PS).
 % The result is in the x domain.
 %
+% For more information on propagating paraxial waves through phase screens,
+% see my dissertation, chap 1, intro theory.  Or Tatarskii, a lot of other
+% places.  My thesis is online:
+% http://leitzel.as.arizona.edu/thesis
+% 
 % SEE ALSO:
 % AOGrid, interact.
 % 
 % Written by: Johanan L. Codona, Steward Observatory: CAAO
 % July 13, 2002
+% Nov 12, 2010 JLCodona.  New version where I keep F in x-space.
 
-  global env;
+
 
   if(nargin < 2)
-    error('requires 2 arguments.');
+    error('requires at least 2 arguments: propagate(AOField,distance).');
   end
 
-  tic; F = transformK(F); kFT=toc;
-
-  tic; [kx,ky] = coords(F); 
-  [KX,KY] = meshgrid(kx,ky); Ksynth=toc;
   
-%  dk = F.AOGrid.dk;
-%  theta = kx/env.k*206265;
-%  fprintf('THETA_X runs from %f to %f with step size %f (arcsec).\n', ...
-%	  min(theta),max(theta),theta(2)-theta(1)); 
-%  theta = ky/env.k*206265;
-%  fprintf('THETA_Y runs from %f to %f with step size %f.\n', min(theta), ...
-%	  max(theta),theta(2)-theta(1)); 
+  if(nargin<3)
+      REGULARIZE = 0.01;
+  end
   
-  tic; P = exp(-i*(KX.^2 + KY.^2)*dz/2/env.k); Psynth=toc;
   
-  tic; F.AOGrid.grid = P .* F.AOGrid.grid; ftime=toc;
+  SZ = F.size;
+  dK = F.dk;
   
-  tic; F = transformX(F); xFT=toc;
-
+  Rf = sqrt(dz*F.lambda);
+%   fprintf('DEBUG: The Fresnel scale of this jump is %g m.\n',Rf);
+  kx1 = mkXvec(SZ(1),dK(1));
+  kx2 = mkXvec(SZ(2),dK(2));
+  [KX2,KX1] = meshgrid(kx2,kx1);
+ 
+  F.grid_ = ifft2(exp((-(REGULARIZE+1i)*dz/2/F.k)*(KX1.^2+KX2.^2))...
+      .*fft2(F.grid)); 
   F.z = F.z - dz;
-  
-  fprintf('propagate:times: k-FT=%f Ksynth=%f Psynth=%f filter=%f x-FT=%f\n', kFT,Ksynth,Psynth,ftime,xFT);
   
