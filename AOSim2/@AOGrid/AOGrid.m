@@ -566,7 +566,7 @@ classdef AOGrid < handle
         
         function [KX,KY] = KCOORDS(A)
             [kx,ky] = kcoords(A);
-            [KX,KY] = meshgrid(kx,ky);
+            [KY,KX] = meshgrid(kx,ky);
         end
         
         function A = zero(A)

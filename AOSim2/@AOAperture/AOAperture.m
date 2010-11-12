@@ -247,11 +247,16 @@ classdef AOAperture < AOSegment
             % Sorry, but this local business is confusing.  I don't think I
             % ever used it.  I should probably strip it out and deprecate
             % it. JLC 20090428.
-			if(nargin>1)
+            
+            if(isempty(A.combined))
+                A.make;
+            end
+            
+            if(nargin>1)
                 [x,y] = coords(A.combined,local);
             else
                 [x,y] = coords(A.combined);
-			end
+            end
 			x = x + A.Offset(2);
 			y = y + A.Offset(1);
 		end
