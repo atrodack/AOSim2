@@ -16,6 +16,8 @@ classdef AOScreen < AOGrid
 		mirror = false;  % This is like a height doubler.
 		touched = true;
         radius = 1; % This is for Zernike reference.
+        
+        fixLF = false; % This is to patch the FFT generation using fractal scaling.
 	end
 	
 	% Private
