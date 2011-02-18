@@ -176,7 +176,19 @@ classdef AODM < AOScreen
 			DM.actuators(SELECT,3) = DM.actuators(SELECT,3) - MEAN;
 		end
 		
-		function DM = addActs(DM,COORDS,segNum,CENTER)
+		function DM = clip(DM,stroke)
+            if(numel(stroke)==1)
+                HIGH = stroke/2;
+                LOW = -stroke/2;
+            else
+                HIGH = stroke(2);
+                LOW =  stroke(1);
+            end
+            
+			DM.actuators(:,3) = max(min(DM.actuators(:,3),HIGH),LOW);
+        end
+        
+        function DM = addActs(DM,COORDS,segNum,CENTER)
 			% This adds more actuators to the list.
 			% NOTE: This is not the incremental update method.  See
 			% bumpActs.
