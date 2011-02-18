@@ -36,7 +36,7 @@ end
 AMPS = sqrt(BRIGHTS);
 
 %% Continue with run setup...
-% make_the_LBTI_AO_jlc
+make_the_LBTI_AO_jlc
 % make_the_MMT_AO_jlc
 
 [x,y] = A.coords;

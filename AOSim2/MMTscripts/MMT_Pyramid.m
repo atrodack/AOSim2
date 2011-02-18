@@ -132,7 +132,7 @@ for i=1:numtrials %Run complete program multiple times
     % The Reconstructor was calibrated at a certain wavelength.
     Fwfs.lambda = RECON.lambda;  
 
-    targetStar = AOStar(gsmag);
+    %targetStar = AOStar(gsmag);
     
     F = AOField(AL);
     F.lambda = SCIENCE_WAVELENGTH;  % Science Wavelength
