@@ -369,9 +369,7 @@ classdef AOReconstructor < handle
 			
 			RECON.rebuild;
         end
-        
-        
-           
+                   
         function RECON = sprogram(RECON,D,Nmax,d,nmax,CENTERS,lambda)
             %This is a segment reconstructor.
             %It creates a few zernikes for the overall aperture
@@ -546,7 +544,6 @@ classdef AOReconstructor < handle
 			RECON.rebuild;
 		end
         
-
         % This tries to improve a reconstructor.  It doesn't matter how you
         % got the first one.
         function RECON = postProcess(RECON,D,Nmax,lambda)
