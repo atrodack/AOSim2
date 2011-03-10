@@ -7,38 +7,77 @@
 % load data/MMTAO_Model_withBadActs_JLC_20090427
 % load data/MMTAO_Model_working
 
+MAGIC_PISTONS = true;
+
 %WFS = WFS17; % local alias.
 
 WFS_FPS = 1000;
 
 % gain=1; % gain>2 is asking for trouble!
 % gain = 0.3; % gain>2 is asking for trouble!
+gain = 0.5; % gain>2 is asking for trouble!
 pgain = 0.1; % pgain is the piston gain.
 
 GAMMA = 2;  % This is the gamma correction for the PSF image.
-SCIENCE_WAVELENGTH = AOField.KBAND;
+SCIENCE_WAVELENGTH = AOField.LBAND;
 
-FOV_START = 0.2;
-FOV_AO_ON = 0.2;
+FOV_START = 1;
+FOV_AO_ON = 1;
+dFOV = 0.01;
 
-ZOOM_STARTTIME = 0.01;
-ZOOM_ENDTIME = 0.02;
-
-AO_STARTTIME = 0.005;
+AO_STARTTIME = 0.0;
+ZOOM_STARTTIME = 0.001;
+ZOOM_ENDTIME = AO_STARTTIME;
 
 %% Define the Atmosphere model and winds aloft.
+
+% Height (m)  Cn2.dh (m^{1/3})  Wind speed (m/s)  Wind direction (deg.)
+% 100        1.28e-13           10                0
+% 500        9.88e-15           10                10
+% 1000       2.11e-14           15                15
+% 2000       5.54e-14           18                20
+% 4000       3.77e-14           20                35
+% 8000       3.39e-14           50                45
+% 16000      3.94e-14           30                30
+
+% Height (m)  Cn2.dh (m^{1/3})  Wind speed (m/s)  Wind direction (deg.)
+
+ATMO_PROFILE = [
+% 100        1.28e-13           10                0
+500        9.88e-15           10                10
+% 1000       2.11e-14           15                15
+% 2000       5.54e-14           18                20
+4000       3.77e-14           20                35
+8000       3.39e-14           50                45
+% 16000      3.94e-14           30                30
+];
+
+ATMO_PROFILE(:,5) = 2.^ceil(log2(round((D+ATMO_PROFILE(:,3)*2)/A.dx)));
+
 ATMO = AOAtmo(A);
 
-WFlow = AOScreen(1024,0.17,500e-9);
-WFlow.name = 'Lower altitude turbulence';
-WFhigh = AOScreen(2048,0.20,500e-9);
-WFhigh.name = 'High altitude turbulence';
+for n=1:size(ATMO_PROFILE,1)
+	WEATHER = AOScreen(ATMO_PROFILE(n,5),0.2,500e-9);
+	WEATHER.setCn2(ATMO_PROFILE(n,2));
+	
+	WEATHER.name = sprintf('Layer %d: alt %g',n,ATMO_PROFILE(n,1));;
+	
+	ATMO.addLayer(WEATHER,ATMO_PROFILE(n,1));
+	
+	az = pi*ATMO_PROFILE(n,4)/180;
+	ATMO.layers{n}.Wind = [cos(az) sin(az)]*ATMO_PROFILE(n,3);
+end
 
-ATMO.addLayer(WFlow,1000);
-ATMO.addLayer(WFhigh,8000);
-
-ATMO.layers{1}.Wind = [3 1];
-ATMO.layers{2}.Wind = [1 -1]*20;
+% WFlow = AOScreen(1024,0.17,500e-9);
+% WFlow.name = 'Lower altitude turbulence';
+% WFhigh = AOScreen(2048,0.20,500e-9);
+% WFhigh.name = 'High altitude turbulence';
+% 
+% ATMO.addLayer(WFlow,1000);
+% ATMO.addLayer(WFhigh,8000);
+% 
+% ATMO.layers{1}.Wind = [3 1];
+% ATMO.layers{2}.Wind = [1 -1]*20;
 
 r0 = ATMO.totalFriedScale;
 th_scat = AOField.VBAND/r0*206265;
@@ -79,7 +118,7 @@ Fwfs.lambda = RECON.lambda;  % The Reconstructor was calibrated at a certain wav
 F = AOField(A);
 F.lambda = SCIENCE_WAVELENGTH;  % Pick your favorite Science Wavelength at the top.
 F.FFTSize = 2048*[1 1]; % This needs to be HUGE for the GMT.
-PSF = F.mkPSF(.2,.2/100); %TODO: This is a bug workaround.  FIXME!
+PSF = F.mkPSF(FOV_AO_ON,dFOV); %TODO: This is a bug workaround.  FIXME!
 
 %% Set your Primary and adaptive secondary initial conditions...
 
@@ -109,7 +148,7 @@ Ipeak = 0;
 HISTMAX = 2000;
 [x,y]=coords(F);
 
-TIMES = (1:2000)/WFS_FPS;
+TIMES = (1:1500)/WFS_FPS;
 
 ALL_PISTONS = zeros(7,length(TIMES));
 
@@ -121,8 +160,10 @@ N1=2;N2=3;  % Selects display geometry.
 
 CCD = 0;
 
+profile on
+
 %% "The clock has started..."
-for n=1:2000
+for n=1:length(TIMES)
     t = TIMES(n);
     ATMO.time = t-TIMES(1000);
 	
@@ -135,10 +176,11 @@ for n=1:2000
         DM.bumpActs(-gain*RECON.RECONSTRUCTOR * WFS.slopes);
         DM.removeMean;
 		
-% 		% This is NEW!
-		PISTONS = WFS.magicPistonSensor(Fwfs,A);
-		A.bumpPistons(- pgain*PISTONS);
-		
+		% Don't do pistons at the WFS band, use longer wavelengths.
+% 		if(MAGIC_PISTONS)
+% 			PISTONS = WFS.magicPistonSensor(Fwfs,A);
+% 			A.bumpPistons(-pgain*PISTONS);
+% 		end
 	end
     % That was it!
     	
@@ -148,10 +190,11 @@ for n=1:2000
 	
 	if(t>AO_STARTTIME)  % Suffer with seeing limit for 50ms.
 		% This is NEW!
-		PISTONS = WFS.magicPistonSensor(F,A);
-		A.bumpPistons(- pgain*PISTONS);
-		
-		ALL_PISTONS(:,n) = PISTONS;
+		if(MAGIC_PISTONS)
+			PISTONS = WFS.magicPistonSensor(F,A);
+			A.bumpPistons(-pgain*PISTONS);
+			ALL_PISTONS(:,n) = PISTONS;
+		end
 	end
 	
     %% Plot some interesting pictures...
@@ -170,10 +213,24 @@ for n=1:2000
 	end
 
 	RNG = FOV * [-1 1];
-	PSF = F.mkPSF(FOV,FOV/100);
+	PSF = F.mkPSF(FOV,dFOV);
 	
-	if(t>AO_STARTTIME) 
+	if(t>ZOOM_ENDTIME) 
 		CCD = CCD + PSF;
+		if(mod(n,10)==0)
+            HEADER = struct;
+            HEADER.date = GOPdate;
+            HEADER.SimTime = ATMO.time;
+            HEADER.SimNTime = n;
+            HEADER.WFS_FPS = WFS_FPS;
+            HEADER.coadds = 10;
+            HEADER.lambda = F.lambda;
+            HEADER.pixel = dFOV;
+            
+			%fits_write_image('/tmp/GMTSim2_exposure.fits',CCD/max(CCD(:)));
+			fits_write_image(sprintf('TIGER_FRAME_%06d.fits',n),CCD,HEADER);
+            CCD = 0;
+		end
 	end
 	
 	Ipeak = max(Ipeak,max(PSF(:)));
@@ -217,47 +274,25 @@ for n=1:2000
 		RECON.Nmodes,gain));
 	clear g
 
-% 	subplot(N1,N2,4);
-%     xScale = linspace(-pi,pi,64);
-%    
-%     g=F.grid_;
-% 	binDat = histc(angle(g(mask)),xScale);
-% 	[vals,indx] = max(binDat);
-% 	phase0 = xScale(indx);
-% 	binDat = histc(angle(exp(-1i*phase0)*g(mask)),xScale);
-% 	bar(xScale,binDat);
-% 	plot(xScale,binDat,'k.');
-%     HISTMAX = max(HISTMAX,max(binDat));
-%     ylim([0 1.1*HISTMAX]);  % Tweak this for your situation...
-% 	title(sprintf('Phase Histogram: Correcting %d modes, gain=%.2f.',...
-% 		RECON.Nmodes,gain));
-% 	xlabel('pupil phase');
-% 	ylabel('frequency');
-
 	subplot(N1,N2,5:6);
-% 	surf(x,y,DM.grid,A.grid,'LineStyle','none');
+	surf(x,y,DM.grid,abs(A.grid),'LineStyle','none');
 % 	surf(x,y,DM.grid,'LineStyle','none');
-% 	zlim([-1 1]*3e-6);
-% 	daspect([1 1 5e-6]);
-% 	lt=light();
-% 	set(lt,'Position',[-1 0 1]);
+	zlim([-1 1]*3e-6);
+	daspect([1 1 5e-6]);
+	lt=light();
+	set(lt,'Position',[-1 0 1]);
     % You may need this if you aren't saving the frames.
-    DM.show; colorbar;
     drawnow;
 
     %% This saves the current picture as a JPEG.
-    filename = sprintf('/tmp/FRAME_%04d.jpg',n);
-    rez = 160;
+%     filename = sprintf('/tmp/FRAME_%04d.jpg',n);
+%     rez = 160;
 
-    resolution = sprintf('-r%d',rez);
-    print(resolution,'-djpeg',filename);
+%     resolution = sprintf('-r%d',rez);
+%     print(resolution,'-djpeg',filename);
 	
 	if(ATMO.time>2.0)
 		break;
 	end
 end
 
-%% Movie creation...
-% Run this command after it is done to create the movie...
-% mencoder "mf:///tmp/FRAME_*.jpg" -mf fps=10 -o MOVIE.avi -ovc lavc -lavcopts vcodec=wmv1
-% system('mencoder "mf:///tmp/FRAME_*.jpg" -mf fps=30 -o MOVIE_automake.avi -ovc lavc -lavcopts vcodec=wmv1');
