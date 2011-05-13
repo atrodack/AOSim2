@@ -41,6 +41,7 @@ AO_STARTTIME = 0.005;
 APP = AOScreen(1);
 APP.lambdaRef = SCIENCE_WAVELENGTH;
 % APP.importAPP('data/MMT_20090102_130151_rmDD_APPS.fits',91);
+
 APP.importAPP('data/MMT_20090102_130151_rmDD_APPS_scaled.fits',91);
 APP.spacing(APP.spacing*6.5/6.25)
 
