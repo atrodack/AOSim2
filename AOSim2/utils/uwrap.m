@@ -43,7 +43,7 @@ else
     CMD = sprintf('/home/jlc/LAB/gold -input "%s" -format float -xsize %d -ysize %d -output "%s" > uwrap.out 2> uwrap.err',RAW,NX,NY,RESULT);
 end
 
-fprintf('CMD: %s\n',CMD);
+% fprintf('CMD: %s\n',CMD);
 ret = system(CMD);
 
 fid = fopen(RESULT,'r');

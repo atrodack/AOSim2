@@ -94,13 +94,17 @@ classdef AOSegment < AOGrid
 			% local is a flag that returns the BBox relative to the object
 			% without the user Offset.  
             if(S.version == 1)
-                if(isempty(S.pupils))
-                    BB = [];
+                if(isempty(S.pupils)) % for externally rendered segments.
+                    [x,y] = S.coords;
+                    filledy = (sum(S.grid,2) ~= 0);
+                    filledx = (sum(S.grid,1) ~= 0);
+                    
+                    BB = [min(y(filledy)) min(x(filledx));
+                        max(y(filledy)) max(x(filledx))];
                     return;
                 end
                 
                 P = S.pupils;
-                
 				% Assume that the x y order in P is conventional (x,y).
 				
                 minX = min(P(:,1) - P(:,3)/2);
