@@ -66,8 +66,16 @@ classdef AOAtmo < AOGrid
 			for n=1:ATMO.nLayers
 				ATMO.layers{n}.screen.touch;
 			end
-		end
+        end
 		
+        function ATMO = make(ATMO)
+        
+            for n=1:ATMO.nLayers
+                 ATMO.layers{n}.screen.make;
+            end
+        end
+        
+        
 		function ATMO = setBeacon(ATMO,x,y,z)
 			if(nargin==4)
 				ATMO.BEACON = [ x y z ];

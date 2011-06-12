@@ -416,8 +416,8 @@ classdef AOWFS < AOGrid & AODetector
         function WFS = quiver(WFS,overplot)
             [XW,YW] = COORDS(WFS);
             CSLOPES = WFS.grid - WFS.bias;
-            SLOPESx = real(CSLOPES);
-            SLOPESy = imag(CSLOPES);
+            SLOPESy = real(CSLOPES); % Sigh.  Remember y is coord 1, 
+            SLOPESx = imag(CSLOPES); % x is coord 2.
             if(nargin>1 && overplot~=0)
                 hold on;
             end

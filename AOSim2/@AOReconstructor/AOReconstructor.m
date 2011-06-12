@@ -333,9 +333,12 @@ classdef AOReconstructor < handle
                         bigtitle(sprintf('DH mode(%d,%d)',n,m));
                         subplot(1,2,1);
                         quiver(RECON.WFS,1);
+                        setFoV(D/2);
                         %pause;
                         subplot(1,2,2);
-                        imagesc(x,y,RECON.A.grid .* RECON.DM.grid); daspect([1 1 1]);
+                        imagesc(x,y,RECON.A.grid .* RECON.DM.grid); 
+                        setFoV(D/2);
+                        daspect([1 1 1]);
                         hold off;
                         drawnow;
                     end

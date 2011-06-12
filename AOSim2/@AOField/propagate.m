@@ -28,29 +28,41 @@ function F = propagate(F,dz,REGULARIZE)
 % Written by: Johanan L. Codona, Steward Observatory: CAAO
 % July 13, 2002
 % Nov 12, 2010 JLCodona.  New version where I keep F in x-space.
+% Nov 15, 2010 JLCodona. I added padding to the propagation.  Next is grid
+% resampling.
 
-
+  NFRESNEL = 25;
 
   if(nargin < 2)
     error('requires at least 2 arguments: propagate(AOField,distance).');
   end
 
-  
   if(nargin<3)
       REGULARIZE = 0.01;
   end
   
-  
   SZ = F.size;
-  dK = F.dk;
+  DX = F.spacing;
+  %dK = F.dk;
   
+  field = F.grid;
+  
+  % pad the field by some number of Fresnel scales.
   Rf = sqrt(dz*F.lambda);
-%   fprintf('DEBUG: The Fresnel scale of this jump is %g m.\n',Rf);
-  kx1 = mkXvec(SZ(1),dK(1));
-  kx2 = mkXvec(SZ(2),dK(2));
+  fprintf('DEBUG: The Fresnel scale of this jump is %g m.\n',Rf);
+  
+  NPAD = round(NFRESNEL*Rf./DX);
+  fprintf('DEBUG: PADDING the field array by [%d,%d] pixels.\n',NPAD);
+  
+  field = padarray(field,NPAD,'post');
+  
+  dK = 2*pi./(size(field) .* DX);
+  
+  kx1 = mkXvec(size(field,1),dK(1));
+  kx2 = mkXvec(size(field,2),dK(2));
   [KX2,KX1] = meshgrid(kx2,kx1);
- 
-  F.grid_ = ifft2(exp((-(REGULARIZE+1i)*dz/2/F.k)*(KX1.^2+KX2.^2))...
-      .*fft2(F.grid)); 
+  PROPAGATOR = exp((-(REGULARIZE+1i)*dz/2/F.k)*(KX1.^2+KX2.^2));
+  field = ifft2(PROPAGATOR.*fft2(field)); 
+  F.grid_ = field(1:SZ(1),1:SZ(2)); 
   F.z = F.z - dz;
   
