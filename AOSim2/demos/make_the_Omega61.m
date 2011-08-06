@@ -10,41 +10,67 @@
 
 %% Load in some definitions...
 
-% This limits the reconstructor probe spatial frequencies during
-% programming.  This is to compensate for my different mode ordering so
-% that when we say "56 modes" we get them all, instead of tippish and
-% tiltish being way up like modes 83 and 84 and therefore not getting
-% included at all.  This is a tricky point and has to have been dealt with
-% in the MMT reconstructor design.  All roads lead back to GUIDO BRUSA!
-MAX_MODES = 56;
+%     * Elevation: 2510 m = 8235 ft.
+%     * Latitude: +32° 24' 59.3" N
+%     * Longitude: 110° 44' 04.3" W
+%             These coordinates are accurate to about 1".
+%     * Time Zone: +7 hours 
+% 
+%     * Primary Mirror Diameter: 1.54 m = 61 inches
+%     * Primary Focal Ratio: f/4 
+% 
+%     * f/13.5 Cassegrain focus
+%           o Plate Scale: 100 microns/arcsec = 10.0 arcsec/mm (nominal)
+%           o Useful Field of View: >435 arcsec diameter
+%           o Secondary Diameter: 40.96 cm 
+%     * f/45 Cassegrain focus
+%           o Plate Scale: 351 microns/arcsec = 2.85 arcsec/mm (nominal)
+%           o Useful Field of View: >325 arcsec diameter
+%           o Secondary Diameter: 14.5 cm 
+% 
+%     * Typical Seeing: 1-2" 
 
-load data/PMMT.mat
-load data/MMT_DM336_Actuators.mat
+D = 1.54;
+% secondary = 40.96/100;
+secondary = 14.5/100;
+
+SPACING = 0.02;
+aa = SPACING;
+% aa = 0.04;
+spider = 0.0254;
+
+
+PUPIL_DEFN = [
+   0 0 D         1 aa 0 0 0 0 0
+   0 0 secondary 0 aa 0 0 0 0 0
+   0 0 spider   -2 aa 4 0 D/1.9 0 0];
 
 Seg = AOSegment;
-Seg.name = 'MMT Primary';
-Seg.pupils = PMMT;
+Seg.spacing(SPACING);
+Seg.name = 'Kuiper 61inch Primary';
+Seg.pupils = PUPIL_DEFN;
 Seg.make;
 
 clf;
 % Seg.touch.make.show;
 A = AOAperture;
-A.name = 'MMT';
+A.spacing(SPACING);
+A.name = 'Kuiper 61 inch';
 A.addSegment(Seg);
 A.show;
 colormap(gray);
 
-%% Grab the actuator coordinates from my hexapolar DM design.  There are
-% pix in the data/pix directory.  I have higher and lower actuator density
-% options already designed as well.
-load data/MMT_DM336_Actuators.mat ACT BAD
-
 %% Make a DM with an OPD grid matched to the Aperture A...
 DM = AODM(A);
-DM.name = 'MMT DM336';
+DM.name = 'BMC 140 element MEMS';
+
+xx = (1:12)*D/12;
+xx = xx - mean(xx);
+[X,Y] = meshgrid(xx,xx);
+ACTS = [X(:) Y(:)];
 
 %% Add in the actuators.
-DM.addActs(ACT*6.5/2,1,A);
+DM.addActs(ACTS,1,A);
 
 % Mark BAD actuators
 %DM.disableActuators(BAD);
@@ -53,14 +79,13 @@ DM.addActs(ACT*6.5/2,1,A);
 
 % Specify the boundary conditions... 
 % DM.defineBC(5,8); % A circle of 8 null points at 5m radius.
-DM.defineBC(5,8); % A circle of 8 null points at 5m radius.
+DM.defineBC(D,8); % A circle of 8 null points at D radius.
 DM.plotRegions; daspect([1 1 1]); drawnow;
 
 %% Build the Shack-Hartmann WFS.
-D = 6.5;
 
 WFS = AOWFS(A,D/12);
-WFS.name = 'MMT Shack-Hartmann WFS';
+WFS.name = 'Omega SHWFS';
 A.show; WFS.quiver(1); drawnow; % Show them.
 
 %% Now for some real work.  Building the RECONSTRUCTOR...
@@ -71,8 +96,8 @@ RECON = AOReconstructor(A,DM,WFS);
 % For now, we will make default assumptions.  You can rebuild it quickly
 % later.  The MMT currently runs with 56 modes corrected.
 
-% RECON.adhocProgram(1);
-% RECON.show;
+RECON.adhocProgram(D/12*3);
+RECON.show;
 
 % OWD = sqrt(MAX_MODES/pi);
 % % RECON.program(D,6*sqrt(2)); % Use Fourier modes. OWD is ~6 lambda/D for programming.

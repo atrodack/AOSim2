@@ -1,20 +1,35 @@
-function [spacings,Dphi,rmsDphi] = SFneedles(PHI,PUPIL,dx,NPOINTS)
+function [spacings,Dphi,rmsDphi] = SFneedles(WAVEFRONT,APER,NPOINTS)
 
-% function [spacings,Dphi,rmsDphi] = SFneedles(PHI,PUPIL,dx,[NPOINTS])
+% function [spacings,Dphi,rmsDphi] = SFneedles(WAVEFRONT,Aperture,[NPOINTS])
 % This method estimates the structure function by dropping random points
 % within a pupil and then computing statistics on the phase value
 % differences.
 % 
+% PHI is an AOATMO or an AOScreen.
+% 
+% NOTE: This computes the wavefront displacement structure function!
+% 
 % JLCodona: 20091118
+% JLCodona: 20110805 Tailored for better use with AOSim2.
 
 if(nargin<4)
 	NPOINTS = 1000;
 end
 
 % dx = X(1,2)-X(1,1);
-[x.y] = coords(PSI);
+% [x,y] = coords(PHI);
+[x,y] = APER.coords;
+% dx = A.dx;
+PHI = WAVEFRONT.grid;
+PUPIL = APER.grid;
+
 % spacings = (0:floor(sqrt(2)*size(PHI,2)))*dx;
-spacings = x-x(1);
+if(numel(x) > numel(y))
+    spacings = x-x(1);
+else
+    spacings = y-y(1);
+end
+
 Dphi = zeros(size(spacings));
 rmsDphi = zeros(size(spacings));
 Nspacings = zeros(size(spacings));
@@ -22,6 +37,7 @@ Nspacings = zeros(size(spacings));
 figure(10);
 hold off;
 imagesc(PHI); sqar;
+colormap(gray);
 drawnow;
 
 POINTS_ = getValidRandomPixels(NPOINTS,PUPIL); % pick valid pixels first
@@ -97,7 +113,8 @@ end
 
 function PIXELS = getValidRandomPixels(N,PUPIL)
   % n.b. column 1 is X and column 2 is Y.
-  PIXELS = 1+fix(floor([rand(N,1)*size(PUPIL,2),rand(N,1)*size(PUPIL,1)]));
+  %PIXELS = 1+fix(floor([rand(N,1)*size(PUPIL,2),rand(N,1)*size(PUPIL,1)]));
+  PIXELS = 1+fix(floor([rand(N,1)*size(PUPIL,1),rand(N,1)*size(PUPIL,2)]));
   PIXELS = filterPoints(PIXELS,PUPIL);
 
 return
