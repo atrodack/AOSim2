@@ -209,13 +209,37 @@ classdef AOScreen < AOGrid
             Y = (Y-Ycen)/r;
 			R = sqrt(X.^2+Y.^2);
 			TH = atan2(Y,X);
-        %    fprintf('Xcen=%d   YCen=%d \n',Xcen,Ycen);
+            %fprintf('Xcen=%d   YCen=%d \n',Xcen,Ycen);
 			
             DH = dh_dh(n,m,R,TH);
             S + amp*DH;
             touch(S);
-		end
+        end
 		
+        function grid = LPF(S,scale)
+            % grid = SCREEN.LPF(S)
+            % This function returns a Gaussian smoothed version
+            % of the SCREEN's displacement grid. 
+            % The SCREEN itself is not altered.
+            % A cheesy AO model is 
+            %
+            % z0 = SCREEN.make.grid;
+            % z1 = SCREEN.LPF(l_actuator);
+            % SCREEN.grid(1.414*(z0-z1));
+            % FIELD.planewave*SCREEN*APERTURE;
+            % PSF = FIELD.mkPSF(FOV,dFOV);
+            % ta dah! (note that this is only a fitting error model)
+        
+            grid = S.grid;
+            N = round(2*scale/S.dx);
+            N = N + mod(N+1,2);
+            filter1d = chebwin(N);
+            FILTER = filter1d*filter1d';
+            FILTER = FILTER / sum(FILTER(:));
+            grid = conv2(grid,FILTER,'same');
+            
+        end
+        
 		function [dPhase_meanSquare,s,...
                 dPhase_meanSquareSigma,...
                 dPhase_] ...
