@@ -21,6 +21,9 @@ MAX_MODES = 56;
 load data/PMMT.mat
 load data/MMT_DM336_Actuators.mat
 
+PMMT(:,5) = 0.03;
+PMMT(2,5) = 0.02;
+
 Seg = AOSegment;
 Seg.name = 'MMT Primary';
 Seg.pupils = PMMT;

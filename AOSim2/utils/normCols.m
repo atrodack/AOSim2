@@ -1,4 +1,4 @@
-function NORMS = normRows(vec)
+function NORMS = normCols(vec)
 
 %% NORMS = normCols(vec)
 % 20080830: JLCodona

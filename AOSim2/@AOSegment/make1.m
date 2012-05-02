@@ -431,10 +431,11 @@ for p=1:N
 
 % 			SPIDER = SPIDER .* (1-peak*exp(-(Yrot/w).^2) .* double(Xrot>0));
 			SPIDER = SPIDER .* double(~(abs(Yrot)<w/2 & Xrot>0));
-		end
+        end
 
-		SPIDER = 1 - (1-SPIDER).*(R<=pupil(8));
-
+        if(pupil(8) > 0)
+            SPIDER = 1 - (1-SPIDER).*(R<=pupil(8));
+        end
 		AOA.grid_ = AOA.grid .* SPIDER;
 		clear SPIDER X0 Y0 Yrot;
 
