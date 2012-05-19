@@ -33,20 +33,16 @@
 D = 1.54;
 % secondary = 40.96/100;
 secondary = 14.5/100;
-
-SPACING = 0.02;
-aa = SPACING;
-% aa = 0.04;
-spider = 0.0254;
+aa = 0.04;
+spider = .1;
 
 
 PUPIL_DEFN = [
    0 0 D         1 aa 0 0 0 0 0
    0 0 secondary 0 aa 0 0 0 0 0
-   0 0 spider   -2 aa 4 0 D/1.9 0 0];
+   0 0 spider   -2 aa 4 0 0 0 0];
 
 Seg = AOSegment;
-Seg.spacing(SPACING);
 Seg.name = 'Kuiper 61inch Primary';
 Seg.pupils = PUPIL_DEFN;
 Seg.make;
@@ -54,7 +50,6 @@ Seg.make;
 clf;
 % Seg.touch.make.show;
 A = AOAperture;
-A.spacing(SPACING);
 A.name = 'Kuiper 61 inch';
 A.addSegment(Seg);
 A.show;
@@ -90,7 +85,6 @@ A.show; WFS.quiver(1); drawnow; % Show them.
 
 %% Now for some real work.  Building the RECONSTRUCTOR...
 RECON = AOReconstructor(A,DM,WFS);
-RECON.lambda = AOField.VBAND;
 
 % Now program this crazy thing.
 % We can look at the singular values and choose things manually later.  
