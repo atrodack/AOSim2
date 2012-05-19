@@ -54,14 +54,14 @@ for n=1:length(POINTS_)
 
 	
 	NX1 = POINTS_(n,:);
-	phi1 = PHI(NX1(1),NX1(2));
+	phi1 = PHI(NX1(2),NX1(1));
 % 	plot(NX1(2),NX1(1),'k^','MarkerSize',15);
-	fprintf('set %d of %d.\n',n,length(POINTS_));
+% 	fprintf('set %d of %d.\r',n,length(POINTS_));
 	for m=n+1:length(POINTS_)
 		NX2 = POINTS_(m,:);
 % 		plot(NX2(2),NX2(1),'yo'); drawnow;
 		
-		phi2 = PHI(NX2(1),NX2(2));
+		phi2 = PHI(NX2(2),NX2(1));
 		dp2 = (phi1-phi2)^2;
 		dpixels = fix(round(norm(NX2-NX1)));
 		bin = dpixels+1;
@@ -81,7 +81,7 @@ for n=1:length(POINTS_)
 % 	clf;
 % 	
 % 	plot(PIXELS(:,2),PIXELS(:,1),'ro'); sqar;
-	drawnow;
+% 	drawnow;
 end
 
 Dphi = Dphi./(Nspacings+eps);
@@ -91,23 +91,23 @@ return
 end
 
 function PIXELS = filterPoints(PIXELS,PUPIL)
-   figure(10);
-%    clf;
-hold on;
-   plot(PIXELS(:,2),PIXELS(:,1),'y.','MarkerSize',2); sqar; 
-
-   OUTSIDE = logical(zeros(size(PIXELS,1)));
-
-   for n=1:size(PIXELS,1)
-	   pixel = PIXELS(n,:);
-	   OUTSIDE(n) = (PUPIL(pixel(1),pixel(2)) < 0.5);
-   end
-   PIXELS(OUTSIDE,:) = [];
-   hold on;
-   plot(PIXELS(:,2),PIXELS(:,1),'ro'); sqar;
-   hold off;
-   drawnow;
-   return
+%     figure(10);
+    %clf;
+%     hold on;
+%     plot(PIXELS(:,2),PIXELS(:,1),'y.','MarkerSize',2); sqar;
+    
+    OUTSIDE = logical(zeros(size(PIXELS,1)));
+    
+    for n=1:size(PIXELS,1)
+        pixel = PIXELS(n,:);
+        OUTSIDE(n) = (PUPIL(pixel(2),pixel(1)) < 0.5);
+    end
+    PIXELS(OUTSIDE,:) = [];
+%     hold on;
+%     plot(PIXELS(:,2),PIXELS(:,1),'ro'); sqar;
+%     hold off;
+%     drawnow;
+    return
 end
 
 
