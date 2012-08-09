@@ -24,6 +24,8 @@ load data/MMT_DM336_Actuators.mat
 PMMT(:,5) = 0.03;
 PMMT(2,5) = 0.02;
 
+PMMT(3,:) = [];
+
 Seg = AOSegment;
 Seg.name = 'MMT Primary';
 Seg.pupils = PMMT;
