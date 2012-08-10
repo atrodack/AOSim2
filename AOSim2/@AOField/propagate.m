@@ -48,7 +48,7 @@ function F = propagate(F,dz,REGULARIZE)
   field = F.grid;
   
   % pad the field by some number of Fresnel scales.
-  Rf = sqrt(dz*F.lambda);
+  Rf = sqrt(abs(dz)*F.lambda);
   fprintf('DEBUG: The Fresnel scale of this jump is %g m.\n',Rf);
   
   NPAD = round(NFRESNEL*Rf./DX);
