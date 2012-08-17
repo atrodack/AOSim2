@@ -726,6 +726,7 @@ classdef AOGrid < handle
             G.grid_(n1,n2) = value;
         end
         
+        % returns a grid of G values interpolated to the spec'd coords.
         function g = interpGrid(G,varargin)
             switch length(varargin)
                 case 0

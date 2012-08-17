@@ -61,6 +61,10 @@ classdef AOAperture < AOSegment
 			if(size(TT,1) ~= length(A.segList))
 				error('setTipTilts:Mismatched number of TipTilts and segments.');
 			end
+			if(size(TT,2) ~= 2)
+                whos TT
+				error('setTipTilts:TipTilts have to be a list of 2D vectors.');
+			end
 			
 			for n=1:length(A.segList)
 				A.segList{n}.tiptilt = TT(n,:);
@@ -187,11 +191,11 @@ classdef AOAperture < AOSegment
 				offset_save = A.segList{n}.Segment.Offset; % save in case important.
                 A.segList{n}.Segment.Offset   = A.segList{n}.Offset;
                 
-				A.combined + A.segList{n}.Segment;
+				A.combined + A.segList{n}.Segment; % This actually does the rendering.
                 % plotCAmpl(A.combined.grid_); sqar; % DEBUG!!!
 				A.segList{n}.Segment.Offset = offset_save; % This just returns the zero from cleanup.
             end
-        
+
             BIGSEG = A.combined;
 			A.AXIS_PIXEL = A.combined.AXIS_PIXEL;
 		end
