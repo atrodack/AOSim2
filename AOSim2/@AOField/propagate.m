@@ -1,4 +1,4 @@
-function F = propagate(F,dz,REGULARIZE)
+function F = propagate(F,dz,REGULARIZE,PADDED)
   
 % PROPAGATE: Propagate an AOField by the distance dz.
 % 
@@ -8,6 +8,7 @@ function F = propagate(F,dz,REGULARIZE)
 % F: The AOField to work on.
 % dz: The distance to propagate (m).
 % REGULARIZE: and optional number to filter high angles.
+% PADDING: PAD The array to PADDED before propagating.
 % 
 % OUTPUTS:
 % F: The modified AOField object.
@@ -41,6 +42,10 @@ function F = propagate(F,dz,REGULARIZE)
       REGULARIZE = 0.01;
   end
   
+  if(nargin<4)
+      PADDED = 0;
+  end
+  
   SZ = F.size;
   DX = F.spacing;
   %dK = F.dk;
@@ -51,17 +56,19 @@ function F = propagate(F,dz,REGULARIZE)
   Rf = sqrt(abs(dz)*F.lambda);
   fprintf('DEBUG: The Fresnel scale of this jump is %g m.\n',Rf);
   
-  NPAD = round(NFRESNEL*Rf./DX);
-  fprintf('DEBUG: PADDING the field array by [%d,%d] pixels.\n',NPAD);
-  
-  field = padarray(field,NPAD,'post');
+  if(nargin>4 | PADDED>F.nx)
+      NPAD = round(NFRESNEL*Rf./DX);
+      fprintf('DEBUG: PADDING the field array by [%d,%d] pixels.\n',NPAD);
+      field = padarray(field,NPAD,'post');
+  end
   
   dK = 2*pi./(size(field) .* DX);
   
   kx1 = mkXvec(size(field,1),dK(1));
   kx2 = mkXvec(size(field,2),dK(2));
   [KX2,KX1] = meshgrid(kx2,kx1);
-  PROPAGATOR = exp((-(REGULARIZE+1i)*dz/2/F.k)*(KX1.^2+KX2.^2));
+  % make sure the regularization damps the high angles even in reverse.
+  PROPAGATOR = exp((-(abs(REGULARIZE*dz)+1i*dz)/2/F.k)*(KX1.^2+KX2.^2));
   field = ifft2(PROPAGATOR.*fft2(field)); 
   F.grid_ = field(1:SZ(1),1:SZ(2)); 
   F.z = F.z - dz;
