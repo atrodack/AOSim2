@@ -9,7 +9,7 @@ classdef AOScreen < AOGrid
 	% 20090417 JLCodona.  AOSim2.
 	
 	% Public properties
-	properties(Access='public', SetAccess='public')
+	properties(Access='public')
 		altitude = 0.;	% Default is on the ground.
 		lambdaRef = AOField.VBAND;
 	
