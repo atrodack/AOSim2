@@ -7,7 +7,7 @@ function F = propagate(F,dz,REGULARIZE,PADDED)
 % INPUTS:
 % F: The AOField to work on.
 % dz: The distance to propagate (m).
-% REGULARIZE: and optional number to filter high angles.
+% REGULARIZE: an optional number to filter high angles.
 % PADDING: PAD The array to PADDED before propagating.
 % 
 % OUTPUTS:

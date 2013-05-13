@@ -79,6 +79,7 @@ classdef AOField < AOGrid
         end
         
         function [PSF,thx,thy] = mkPSF(F,FoV,dth,N0)
+            % [PSF,thx,thy] = mkPSF(F,FoV,dth,N0)
             % N0 is optional.  If included then photonize the PSF.
             if(nargin<3)
                 [PSF,thx,thy] = mkHALO(F,FoV);

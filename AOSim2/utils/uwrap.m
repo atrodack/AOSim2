@@ -74,10 +74,10 @@ CMD = sprintf('%s/%s -input "%s" -format float -xsize %d -ysize %d -output "%s" 
 % fprintf('CMD: %s\n',CMD);
 ret = system(CMD);
 
-if(ret ~= 0)
-    !cat uwrap.err
-    error('The system call failed.');
-end
+% if(ret ~= 0)
+%     !cat uwrap.err
+%     error('The system call failed.');
+% end
 
 fid = fopen(RESULT,'r');
 uwphase = fread(fid,NX*NY,'float');
