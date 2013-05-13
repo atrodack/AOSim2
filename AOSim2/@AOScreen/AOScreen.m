@@ -134,12 +134,14 @@ classdef AOScreen < AOGrid
         end
         
         function S = addRipple(S,K,amp,phase)
+        % S = addRipple(S,K,amp,phase)
             [X,Y] = S.COORDS();
             S + amp*cos(K(1)*X + K(2)*Y + phase);
             touch(S);
         end
         
         function S = addGaussian(S,CENTER,amp,width)
+        % S = addGaussian(S,CENTER,amp,width)
             [X,Y] = S.COORDS();
             S + amp*exp(-((X-CENTER(1)).^2 + (Y-CENTER(2)).^2)/width^2);
             touch(S);
@@ -244,12 +246,14 @@ classdef AOScreen < AOGrid
                 dPhase_meanSquareSigma,...
                 dPhase_] ...
                 = SFestimate(PS,APER,Npoints,dspacing,lambda)
-			% Estimate the AOScreen structure function by brute force.
-			% This method Starts with Npoints in the PS grid and then
-			% filters them based on being inside the pupil.  
-			% The number of points is reduced from the value set, and
-			% pairwise ombined, so be aware of huge tasks being
-			% inadvertently set.
+            % [dPhase_meanSquare,s,dPhase_meanSquareSigma,dPhase_] ...
+            %   = SFestimate(PS,APER,Npoints,dspacing,lambda)
+            % Estimate the AOScreen structure function by brute force.
+            % This method Starts with Npoints in the PS grid and then
+            % filters them based on being inside the pupil.
+            % The number of points is reduced from the value set, and
+            % pairwise ombined, so be aware of huge tasks being
+            % inadvertently set.
 
             if(nargin<5)
                 lambda = PS.lambdaRef;
