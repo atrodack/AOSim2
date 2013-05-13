@@ -144,7 +144,6 @@ classdef AOWFS < AOGrid & AODetector
             WFS.bias = WFS.grid;
 		end
 
-		
         function WFS = sense(WFS,F,useNoise)
             % Compute the subap centroid.
             % JLC 20090820: This is a more serious attempt at doing a Shack-Hartmann.
@@ -203,8 +202,6 @@ classdef AOWFS < AOGrid & AODetector
             end
         end
         
-
-
         function WFS = sensePyramid(WFS,F,useNoise)
             %Pyramid sensing code 
                        
@@ -416,8 +413,8 @@ classdef AOWFS < AOGrid & AODetector
         function WFS = quiver(WFS,overplot)
             [XW,YW] = COORDS(WFS);
             CSLOPES = WFS.grid - WFS.bias;
-            SLOPESx = real(CSLOPES);
-            SLOPESy = imag(CSLOPES);
+            SLOPESy = real(CSLOPES); % Sigh.  Remember y is coord 1, 
+            SLOPESx = imag(CSLOPES); % x is coord 2.
             if(nargin>1 && overplot~=0)
                 hold on;
             end

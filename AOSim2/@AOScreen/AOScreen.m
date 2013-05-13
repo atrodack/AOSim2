@@ -9,13 +9,15 @@ classdef AOScreen < AOGrid
 	% 20090417 JLCodona.  AOSim2.
 	
 	% Public properties
-	properties(Access='public', SetAccess='public')
+	properties(Access='public')
 		altitude = 0.;	% Default is on the ground.
 		lambdaRef = AOField.VBAND;
 	
 		mirror = false;  % This is like a height doubler.
 		touched = true;
         radius = 1; % This is for Zernike reference.
+        
+        fixLF = false; % This is to patch the FFT generation using fractal scaling.
 	end
 	
 	% Private
@@ -30,7 +32,18 @@ classdef AOScreen < AOGrid
 	methods
 		% Constructors
 		function PS = AOScreen(varargin)
-			
+			% PS = AOScreen(size_defn,[r0],[reference wavelenth])
+            % This is the constructor.  It can take several arguments.
+            % size_defn can be another object, the AOScreen will be built
+            % to match it.
+            % It can be a single number whilch will be the size of a square
+            % grid with the default pixel size of 4cm.  This can all be
+            % changed later and the screen rerendered.
+            % The size_defn can be [n1 n2] and a non-square array will be
+            % rendered.
+            % r0 (optional, defaults to 15cm at VBAND) depends on a ref lambda, so you 
+            % may want to define that also.
+            
 			% (nxy,r0,lambda)
 			PS = PS@AOGrid(varargin{1});
 
@@ -121,12 +134,14 @@ classdef AOScreen < AOGrid
         end
         
         function S = addRipple(S,K,amp,phase)
+        % S = addRipple(S,K,amp,phase)
             [X,Y] = S.COORDS();
             S + amp*cos(K(1)*X + K(2)*Y + phase);
             touch(S);
         end
         
         function S = addGaussian(S,CENTER,amp,width)
+        % S = addGaussian(S,CENTER,amp,width)
             [X,Y] = S.COORDS();
             S + amp*exp(-((X-CENTER(1)).^2 + (Y-CENTER(2)).^2)/width^2);
             touch(S);
@@ -151,6 +166,7 @@ classdef AOScreen < AOGrid
         end
 
         function S = addZernike(S,n,m,amp,D,cenx,ceny)
+        % AOScreen S = S.addZernike(n,m,amp,D,cenx,ceny)
             if(nargin>4)
                 S.radius = D/2;
             end
@@ -168,7 +184,7 @@ classdef AOScreen < AOGrid
             y = (y-Xcen)/S.radius;
             zern = ZernikeStringR(n,m);
             S + amp*eval(zern);
-            touch(S);
+            %touch(S);
         end
 
 		function S = addDiskHarmonic(S,n,m,amp,D,cenx,ceny)
@@ -195,23 +211,49 @@ classdef AOScreen < AOGrid
             Y = (Y-Ycen)/r;
 			R = sqrt(X.^2+Y.^2);
 			TH = atan2(Y,X);
-        %    fprintf('Xcen=%d   YCen=%d \n',Xcen,Ycen);
+            %fprintf('Xcen=%d   YCen=%d \n',Xcen,Ycen);
 			
             DH = dh_dh(n,m,R,TH);
             S + amp*DH;
             touch(S);
-		end
+        end
 		
+        function grid = LPF(S,scale)
+            % grid = SCREEN.LPF(S)
+            % This function returns a Gaussian smoothed version
+            % of the SCREEN's displacement grid. 
+            % The SCREEN itself is not altered.
+            % A cheesy AO model is 
+            %
+            % z0 = SCREEN.make.grid;
+            % z1 = SCREEN.LPF(l_actuator);
+            % SCREEN.grid(1.414*(z0-z1));
+            % FIELD.planewave*SCREEN*APERTURE;
+            % PSF = FIELD.mkPSF(FOV,dFOV);
+            % ta dah! (note that this is only a fitting error model)
+        
+            grid = S.grid;
+            N = round(2*scale/S.dx);
+            N = N + mod(N+1,2);
+            filter1d = chebwin(N);
+            FILTER = filter1d*filter1d';
+            FILTER = FILTER / sum(FILTER(:));
+            grid = conv2(grid,FILTER,'same');
+            
+        end
+        
 		function [dPhase_meanSquare,s,...
                 dPhase_meanSquareSigma,...
                 dPhase_] ...
                 = SFestimate(PS,APER,Npoints,dspacing,lambda)
-			% Estimate the AOScreen structure function by brute force.
-			% This method Starts with Npoints in the PS grid and then
-			% filters them based on being inside the pupil.  
-			% The number of points is reduced from the value set, and
-			% pairwise ombined, so be aware of huge tasks being
-			% inadvertently set.
+            % [dPhase_meanSquare,s,dPhase_meanSquareSigma,dPhase_] ...
+            %   = SFestimate(PS,APER,Npoints,dspacing,lambda)
+            % Estimate the AOScreen structure function by brute force.
+            % This method Starts with Npoints in the PS grid and then
+            % filters them based on being inside the pupil.
+            % The number of points is reduced from the value set, and
+            % pairwise ombined, so be aware of huge tasks being
+            % inadvertently set.
 
             if(nargin<5)
                 lambda = PS.lambdaRef;

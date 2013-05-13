@@ -21,6 +21,11 @@ MAX_MODES = 56;
 load data/PMMT.mat
 load data/MMT_DM336_Actuators.mat
 
+PMMT(:,5) = 0.03;
+PMMT(2,5) = 0.02;
+
+PMMT(3,:) = [];
+
 Seg = AOSegment;
 Seg.name = 'MMT Primary';
 Seg.pupils = PMMT;
@@ -76,8 +81,8 @@ RECON = AOReconstructor(A,DM,WFS);
 
 % OWD = sqrt(MAX_MODES/pi);
 % % RECON.program(D,6*sqrt(2)); % Use Fourier modes. OWD is ~6 lambda/D for programming.
-RECON.zprogram(D,12);  % program using Zernikes.
-RECON.rebuild(56).show;
+% RECON.zprogram(D,12);  % program using Zernikes.
+% RECON.rebuild(56).show;
 
 % % RECON.dhprogram(D,11); % program using disk harmonics.
 % semilogy(RECON.s/RECON.s(1));
@@ -108,7 +113,7 @@ RECON.rebuild(56).show;
 % % DM.disableActuators(MMT_BADACTS_NO_CURRENT);
 % % DM.disableActuators(MMT_BADACTS_NO_POSITION);
 % 
-save MMTAO_Model_jlc A DM WFS RECON D % Paranoid.
+% save MMTAO_Model_jlc A DM WFS RECON D % Paranoid.
 % 
 % % Now run something like the canned_GMT script, but don't load anything in
 % % first.  

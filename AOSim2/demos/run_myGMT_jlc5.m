@@ -236,20 +236,21 @@ for n=1:2000
 
 	subplot(N1,N2,5:6);
 % 	surf(x,y,DM.grid,A.grid,'LineStyle','none');
-	surf(x,y,DM.grid,'LineStyle','none');
-	zlim([-1 1]*3e-6);
-	daspect([1 1 5e-6]);
-	lt=light();
-	set(lt,'Position',[-1 0 1]);
+% 	surf(x,y,DM.grid,'LineStyle','none');
+% 	zlim([-1 1]*3e-6);
+% 	daspect([1 1 5e-6]);
+% 	lt=light();
+% 	set(lt,'Position',[-1 0 1]);
     % You may need this if you aren't saving the frames.
+    DM.show; colorbar;
     drawnow;
 
     %% This saves the current picture as a JPEG.
-%     filename = sprintf('/tmp/FRAME_%04d.jpg',n);
-%     rez = 160;
-% 
-%     resolution = sprintf('-r%d',rez);
-%     print(resolution,'-djpeg',filename);
+    filename = sprintf('/tmp/FRAME_%04d.jpg',n);
+    rez = 160;
+
+    resolution = sprintf('-r%d',rez);
+    print(resolution,'-djpeg',filename);
 	
 	if(ATMO.time>2.0)
 		break;

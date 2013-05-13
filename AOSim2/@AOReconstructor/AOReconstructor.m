@@ -314,7 +314,7 @@ classdef AOReconstructor < handle
 			for n=1:Nmax % starting at 1  skips PISTON mode.
                 fprintf('\nDisk Harmonic ORDER %d: ',n);
 				for m=-Mmax:Mmax
-					fprintf('%d',m);
+					fprintf('%d ',m);
 					
 					ABER.zero.addDiskHarmonic(n,m,amp,RECON.D);
 					RECON.DM.setActs(ABER);
@@ -333,9 +333,12 @@ classdef AOReconstructor < handle
                         bigtitle(sprintf('DH mode(%d,%d)',n,m));
                         subplot(1,2,1);
                         quiver(RECON.WFS,1);
+                        setFoV(D/2);
                         %pause;
                         subplot(1,2,2);
-                        imagesc(x,y,RECON.A.grid .* RECON.DM.grid); daspect([1 1 1]);
+                        imagesc(x,y,RECON.A.grid .* RECON.DM.grid); 
+                        setFoV(D/2);
+                        daspect([1 1 1]);
                         hold off;
                         drawnow;
                     end
@@ -366,9 +369,7 @@ classdef AOReconstructor < handle
 			
 			RECON.rebuild;
         end
-        
-        
-           
+                   
         function RECON = sprogram(RECON,D,Nmax,d,nmax,CENTERS,lambda)
             %This is a segment reconstructor.
             %It creates a few zernikes for the overall aperture
@@ -543,7 +544,6 @@ classdef AOReconstructor < handle
 			RECON.rebuild;
 		end
         
-
         % This tries to improve a reconstructor.  It doesn't matter how you
         % got the first one.
         function RECON = postProcess(RECON,D,Nmax,lambda)

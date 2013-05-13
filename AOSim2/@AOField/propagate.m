@@ -1,13 +1,15 @@
-function F = propagate(F,dz)
+function F = propagate(F,dz,REGULARIZE,PADDED)
   
 % PROPAGATE: Propagate an AOField by the distance dz.
 % 
-% USAGE: F = propagate(F,dz)
+% USAGE: F = propagate(F,dz,REGULARIZE)
 % 
 % INPUTS:
 % F: The AOField to work on.
 % dz: The distance to propagate (m).
-%
+% REGULARIZE: an optional number to filter high angles.
+% PADDING: PAD The array to PADDED before propagating.
+% 
 % OUTPUTS:
 % F: The modified AOField object.
 % 
@@ -16,38 +18,58 @@ function F = propagate(F,dz)
 % medium effects, you must call interact(F,PS).
 % The result is in the x domain.
 %
+% For more information on propagating paraxial waves through phase screens,
+% see my dissertation, chap 1, intro theory.  Or Tatarskii, a lot of other
+% places.  My thesis is online:
+% http://leitzel.as.arizona.edu/thesis
+% 
 % SEE ALSO:
 % AOGrid, interact.
 % 
 % Written by: Johanan L. Codona, Steward Observatory: CAAO
 % July 13, 2002
+% Nov 12, 2010 JLCodona.  New version where I keep F in x-space.
+% Nov 15, 2010 JLCodona. I added padding to the propagation.  Next is grid
+% resampling.
 
-  global env;
+  NFRESNEL = 25;
 
   if(nargin < 2)
-    error('requires 2 arguments.');
+    error('requires at least 2 arguments: propagate(AOField,distance).');
   end
 
-  tic; F = transformK(F); kFT=toc;
-
-  tic; [kx,ky] = coords(F); 
-  [KX,KY] = meshgrid(kx,ky); Ksynth=toc;
+  if(nargin<3)
+      REGULARIZE = 0.01;
+  end
   
-%  dk = F.AOGrid.dk;
-%  theta = kx/env.k*206265;
-%  fprintf('THETA_X runs from %f to %f with step size %f (arcsec).\n', ...
-%	  min(theta),max(theta),theta(2)-theta(1)); 
-%  theta = ky/env.k*206265;
-%  fprintf('THETA_Y runs from %f to %f with step size %f.\n', min(theta), ...
-%	  max(theta),theta(2)-theta(1)); 
+  if(nargin<4)
+      PADDED = 0;
+  end
   
-  tic; P = exp(-i*(KX.^2 + KY.^2)*dz/2/env.k); Psynth=toc;
+  SZ = F.size;
+  DX = F.spacing;
+  %dK = F.dk;
   
-  tic; F.AOGrid.grid = P .* F.AOGrid.grid; ftime=toc;
+  field = F.grid;
   
-  tic; F = transformX(F); xFT=toc;
-
+  % pad the field by some number of Fresnel scales.
+  Rf = sqrt(abs(dz)*F.lambda);
+  %fprintf('DEBUG: The Fresnel scale of this jump is %g m.\n',Rf);
+  
+  if(nargin>4 | PADDED>F.nx)
+      NPAD = round(NFRESNEL*Rf./DX);
+      fprintf('DEBUG: PADDING the field array by [%d,%d] pixels.\n',NPAD);
+      field = padarray(field,NPAD,'post');
+  end
+  
+  dK = 2*pi./(size(field) .* DX);
+  
+  kx1 = mkXvec(size(field,1),dK(1));
+  kx2 = mkXvec(size(field,2),dK(2));
+  [KX2,KX1] = meshgrid(kx2,kx1);
+  % make sure the regularization damps the high angles even in reverse.
+  PROPAGATOR = exp((-(abs(REGULARIZE*dz)+1i*dz)/2/F.k)*(KX1.^2+KX2.^2));
+  field = ifft2(PROPAGATOR.*fft2(field)); 
+  F.grid_ = field(1:SZ(1),1:SZ(2)); 
   F.z = F.z - dz;
-  
-  fprintf('propagate:times: k-FT=%f Ksynth=%f Psynth=%f filter=%f x-FT=%f\n', kFT,Ksynth,Psynth,ftime,xFT);
   

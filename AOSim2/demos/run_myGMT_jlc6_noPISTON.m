@@ -7,10 +7,7 @@
 % load data/MMTAO_Model_withBadActs_JLC_20090427
 % load data/MMTAO_Model_working
 
-
-MAGIC_PISTONS = false;
-
-
+MAGIC_PISTONS = true;
 
 %WFS = WFS17; % local alias.
 
@@ -27,10 +24,9 @@ SCIENCE_WAVELENGTH = AOField.MBAND;
 FOV_START = 0.3;
 FOV_AO_ON = 0.3;
 
+AO_STARTTIME = 0.0;
 ZOOM_STARTTIME = 0.01;
-ZOOM_ENDTIME = 0.110;
-
-AO_STARTTIME = 0.005;
+ZOOM_ENDTIME = AO_STARTTIME;
 
 %% Define the Atmosphere model and winds aloft.
 

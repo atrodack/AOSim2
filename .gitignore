@@ -1,0 +1,14 @@
+.dropbox
+*.swp
+*~
+*Icon*
+*.log
+*.aux
+*.dvi
+*#
+*.bbl
+*.bak
+*.fits
+*.mat
+*.out
+*.err

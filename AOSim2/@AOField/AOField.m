@@ -37,6 +37,14 @@ classdef AOField < AOGrid
         end
 
         function [HALO,thx,thy] = mkHALO(F,FoV,dth) % angles in arcsecs.
+            % Computes the FFT of part of the field and interpolates it to
+            % the fftgrid_.  
+            % There are coords for the interpolated grid and actual
+            % coordinates for the FFT of the AOGrid.
+            % KCOORDS returns the coordinates for 
+            
+            halo = F.fft; % do this first to initialize the buffers, etc.
+            
             k = 2*pi/F.lambda;
             [kx,ky] = kcoords(F);
             
@@ -50,7 +58,7 @@ classdef AOField < AOGrid
             end
             
             % this is get a slightly larger region to interpolate into.
-            % No more NaNs!
+            % No more extrapolation NaNs!
             SELx = abs(thx_)<=(FoV+2*dTH(1)); 
             SELy = abs(thy_)<=(FoV+2*dTH(2));
             thx_ = thx_(SELx);
@@ -63,7 +71,6 @@ classdef AOField < AOGrid
             thy = thx;
             [THX,THY] = meshgrid(thx,thy);
             
-            halo = F.fft; 
             halo = halo(SELx,SELy);
             
             HALO = qinterp2(THX_,THY_,halo,THX,THY);
@@ -72,6 +79,7 @@ classdef AOField < AOGrid
         end
         
         function [PSF,thx,thy] = mkPSF(F,FoV,dth,N0)
+            % [PSF,thx,thy] = mkPSF(F,FoV,dth,N0)
             % N0 is optional.  If included then photonize the PSF.
             if(nargin<3)
                 [PSF,thx,thy] = mkHALO(F,FoV);
@@ -91,6 +99,7 @@ classdef AOField < AOGrid
         end
         
         function F = plotPSF(F,FoV,dexRange,dth)
+        % F = plotPSF(F,FoV,dexRange,dth)
             if(nargin<3)
                 dexRange = [-4 0];
             end

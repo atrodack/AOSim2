@@ -75,9 +75,11 @@ classdef AOSegment < AOGrid
                     end
                 else  % piston and Tip tilt.
                     [X,Y] = COORDS(obj);
+                    X0 = obj.Offset(1);
+                    Y0 = obj.Offset(2);
                     g = exp((1i*2*pi/obj.lambdaRef)*...
-                        (OPL+obj.tiptilt(1)*X +...
-                        obj.tiptilt(2)*Y)) .* ...
+                        (OPL+obj.tiptilt(1)*(X-X0) +...
+                        obj.tiptilt(2)*(Y-Y0))) .* ...
                         obj.grid_;
                 end
             else
@@ -94,13 +96,17 @@ classdef AOSegment < AOGrid
 			% local is a flag that returns the BBox relative to the object
 			% without the user Offset.  
             if(S.version == 1)
-                if(isempty(S.pupils))
-                    BB = [];
+                if(isempty(S.pupils)) % for externally rendered segments.
+                    [x,y] = S.coords;
+                    filledy = (sum(S.grid,2) ~= 0);
+                    filledx = (sum(S.grid,1) ~= 0);
+                    
+                    BB = [min(y(filledy)) min(x(filledx));
+                        max(y(filledy)) max(x(filledx))];
                     return;
                 end
                 
                 P = S.pupils;
-                
 				% Assume that the x y order in P is conventional (x,y).
 				
                 minX = min(P(:,1) - P(:,3)/2);

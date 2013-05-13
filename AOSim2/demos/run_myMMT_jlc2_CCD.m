@@ -74,7 +74,7 @@ Fwfs.lambda = RECON.lambda;  % The Reconstructor was calibrated at a certain wav
 
 F = AOField(A);
 F.lambda = SCIENCE_WAVELENGTH;  % Pick your favorite Science Wavelength at the top.
-F.FFTSize = 2048*[1 1]; % This needs to be HUGE for the GMT.
+F.FFTSize = 512*[1 1]; 
 PSF = F.mkPSF(.2,.2/100); %TODO: This is a bug workaround.  FIXME!
 
 %% Set your Primary and adaptive secondary initial conditions...
@@ -115,10 +115,6 @@ for n=1:2000
     ATMO.time = t-1.5;
 	
     %% This is the guts of the AO closed-loop integrating servo....
-	
-	if(mod(n,FRAMES_PER_EXP)==1)
-		CCD = 0;
-	end
 	
     ATMO.BEACON = GUIDE_STAR;
     WFS.sense(Fwfs.planewave*ATMO*A*DM);
@@ -206,12 +202,16 @@ for n=1:2000
     %% This saves the current picture as a JPEG.
 	if(mod(n,FRAMES_PER_EXP)==1)
 		
-		filename = sprintf('/tmp/FRAME_%04d.jpg',nframe); nframe=nframe+1;
+        CUBE(:,:,nframe) = CCD;
+        fits_write_image('/tmp/MMT_Simjlc2.fits',CUBE(:,:,1:nframe));
+		filename = sprintf('/tmp/FRAME_%04d.jpg',nframe); 
+        nframe=nframe+1;
 		rez = 160;
 		
 		resolution = sprintf('-r%d',rez);
 		print(resolution,'-djpeg',filename);
 		
+        CCD = 0;
 	end
 	
 	if(ATMO.time>2.0)
