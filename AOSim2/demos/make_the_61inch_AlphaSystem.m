@@ -34,16 +34,21 @@ D = 1.54;
 % secondary = 40.96/100;
 secondary = 14.5/100;
 aa = 0.04;
-spider = .1;
+spider = aa;
 
+
+% PUPIL_DEFN = [
+%    0 0 D         1 aa 0 0 0 0 0
+%    0 0 secondary 0 aa 0 0 0 0 0
+%    0 0 spider   -2 aa 4 0 0 0 0];
 
 PUPIL_DEFN = [
    0 0 D         1 aa 0 0 0 0 0
-   0 0 secondary 0 aa 0 0 0 0 0
-   0 0 spider   -2 aa 4 0 0 0 0];
+   0 0 secondary 0 aa 0 0 0 0 0 ];
 
 Seg = AOSegment;
 Seg.name = 'Kuiper 61inch Primary';
+Seg.spacing(0.01);
 Seg.pupils = PUPIL_DEFN;
 Seg.make;
 

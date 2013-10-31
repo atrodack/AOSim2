@@ -34,7 +34,7 @@ D = 1.54;
 % secondary = 40.96/100;
 secondary = 14.5/100;
 
-SPACING = 0.02;
+SPACING = 0.01;
 aa = SPACING;
 % aa = 0.04;
 spider = 0.0254;
@@ -42,7 +42,7 @@ spider = 0.0254;
 
 PUPIL_DEFN = [
    0 0 D         1 aa 0 0 0 0 0
-   0 0 secondary 0 aa 0 0 0 0 0
+   0 0 secondary 0 aa/2 0 0 0 0 0
    0 0 spider   -2 aa 4 0 D/1.9 0 0];
 
 Seg = AOSegment;
