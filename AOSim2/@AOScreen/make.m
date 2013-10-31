@@ -66,7 +66,7 @@ zero(PS);
 addNoise(PS,1.);
 
 % Shape it so that it has the correct shape.
-% PSD like k^5/3, sqrt(PSD) like k^5/6.
+% PSD like k.^(-5/3), sqrt(PSD) like k.^(-5/6).
 
 % None of this matters since I am just going to normalize it at the end.
 

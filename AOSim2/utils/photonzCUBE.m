@@ -1,6 +1,6 @@
-function photons = photonz(IMG,N0)
+function PHOTONS = photonzCUBE(CUBE,N0,DATATYPE)
   
-% photons = photonz(IMG,N0);
+% photons = photonzCUBE(CUBE,N0,DATATYPE)
 %
 % This function makes a photon noise version of a 
 % field intensity.
@@ -19,13 +19,14 @@ function photons = photonz(IMG,N0)
 % March 23, 2004 Reduced FF error by number of LOOKS.
 % Dec 12, 2007   Rewrote this to work with a straight array and use 
 %                MATLAB's imnoise function.
+% June 7, 2013   Added CUBE processing.
 
-IMG = double(IMG);
-Sum0 = sum(IMG(:));
-IMG = IMG*(1e-12*N0/Sum0);
-photons = 1e12*imnoise(IMG,'poisson');
+PHOTONS = zeros(size(CUBE),DATATYPE);
 
-return;
+for n=1:size(CUBE,3)
+    PHOTONS(:,:,n) = photonz(CUBE(:,:,n),N0);
+end
+
 
 
 
