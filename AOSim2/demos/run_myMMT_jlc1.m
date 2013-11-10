@@ -202,13 +202,13 @@ for n=1:2000
         HEADER.DATA = GOPdate;
         HEADER.NFRAMES = n;
         
-        fits_write_image('/tmp/CCD_Dump.fits',normalize(CCD),HEADER);
+%         fits_write_image('/tmp/CCD_Dump.fits',normalize(CCD),HEADER);
     end
 % =======
 	if(t>ZOOM_ENDTIME && t>AO_STARTTIME)
 		CCD = CCD + PSF;
 		if(mod(n,50)==0)
-			fits_write_image('/tmp/PSF_Exposure.fits',CCD/max(CCD(:)));
+% 			fits_write_image('/tmp/PSF_Exposure.fits',CCD/max(CCD(:)));
 		end
 	end
 	Ipeak = max(Ipeak,max(PSF(:)));
