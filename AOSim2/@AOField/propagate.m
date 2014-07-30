@@ -21,7 +21,7 @@ function F = propagate(F,dz,REGULARIZE,PADDED)
 % For more information on propagating paraxial waves through phase screens,
 % see my dissertation, chap 1, intro theory.  Or Tatarskii, a lot of other
 % places.  My thesis is online:
-% http://leitzel.as.arizona.edu/thesis
+% http://books.google.com/books?id=59seqhaUvPwC
 % 
 % SEE ALSO:
 % AOGrid, interact.

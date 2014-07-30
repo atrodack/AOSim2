@@ -242,6 +242,41 @@ classdef AOScreen < AOGrid
             
         end
         
+        function grid = LPF_(S,scale,transition)
+            % grid = SCREEN.LPF(S)
+            % This function returns a Gaussian smoothed version
+            % of the SCREEN's displacement grid. 
+            % The SCREEN itself is not altered.
+            % A cheesy AO model is 
+            %
+            % z0 = SCREEN.make.grid;
+            % z1 = SCREEN.LPF(l_actuator);
+            % SCREEN.grid(1.414*(z0-z1));
+            % FIELD.planewave*SCREEN*APERTURE;
+            % PSF = FIELD.mkPSF(FOV,dFOV);
+            % ta dah! (note that this is only a fitting error model)
+        
+            KMAX = 2*pi/scale;
+            
+            if(nargin<3)
+                EXTENT = S.extent;
+                %transition = 2*pi/EXTENT(1)/25
+                transition = KMAX/20
+            end
+            
+            grid = S.grid;
+            [KX,KY] = S.KCOORDS;
+            KR = sqrt(KX.^2+KY.^2);
+            FILTER = (smoothedge(2*pi/scale-KR,transition));
+            FILTER = FILTER / sum(FILTER(:));
+            FILTER = fftshift(FILTER);
+            
+            grid = real(ifft2(fft2(S.grid).*FILTER));
+            S.grid(ifft2(fft2(S.grid).*FILTER));
+            %grid = conv2(grid,FILTER,'same');
+            
+        end
+        
 		function [dPhase_meanSquare,s,...
                 dPhase_meanSquareSigma,...
                 dPhase_] ...
@@ -318,5 +353,11 @@ classdef AOScreen < AOGrid
             hold off;
             drawnow;
         end
- 	end % public methods.
+    
+        function SF = SFtheo(PS,x)
+            SF = 6.88 * (x/PS.r0).^(5/3);
+        end
+        
+        
+    end % public methods.
 end
