@@ -79,14 +79,14 @@ RECON = AOReconstructor(A,DM,WFS);
 
 %% Now program this crazy thing.
 
-RECON.adhocProgram(1);
-RECON.show;
+% RECON.adhocProgram(1);
+% RECON.show;
 
 % RECON.adhocProgram(1);
 % RECON.show;
 
-OWD = sqrt(MAX_MODES/pi);
+% OWD = sqrt(MAX_MODES/pi);
 % RECON.program(D,6*sqrt(2)); % Use Fourier modes. OWD is ~6 lambda/D for programming.
-RECON.zprogram(D,12);  % program using Zernikes.
-RECON.rebuild(56).show;
+% RECON.zprogram(D,12);  % program using Zernikes.
+% RECON.rebuild(56).show;
 
