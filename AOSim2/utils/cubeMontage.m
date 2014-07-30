@@ -6,9 +6,14 @@ function IMG = cubeMontage(CUBE,N1,N2)
 
 % CUBE(:,:,N1*N2+1:end) = [];
 
+N3 = size(CUBE,3);
+
+if(nargin<3)
+    N2 = ceil(N3/N1);
+end
+
 IMG = zeros(N1*size(CUBE,1),N2*size(CUBE,2));
 
-N3 = size(CUBE,3);
 
 CH1 = 1:size(CUBE,1);
 CH2 = 1:size(CUBE,2);

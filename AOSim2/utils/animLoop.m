@@ -20,6 +20,11 @@ else
     MAX = RNG(2);
 end
 
+if(MIN == MAX)
+    MIN = MIN - 1;
+    MAX = MAX + 1;
+end
+
 figure(figNum);
 
 set(gcf,'DoubleBuffer','on');
