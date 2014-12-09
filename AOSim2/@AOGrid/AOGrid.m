@@ -1,4 +1,4 @@
-classdef AOGrid < handle
+classdef AOGrid < matlab.mixin.Copyable  % formerly classdef AOGrid < handle
     % The main AOSim2 class.
     %
     % This is more important than you think...
@@ -15,6 +15,7 @@ classdef AOGrid < handle
     % 20090407: JLCodona
     % 20090415 JLCodona.  Added fft method and new fftgrid_ usage model.
     % 20100514 JLCodona.  Added a coordinates caching scheme.
+    % 20141120 JLCodona.  Made the objects deep-copyable.
     
     %% Properties
     properties(Constant=true, GetAccess='protected')

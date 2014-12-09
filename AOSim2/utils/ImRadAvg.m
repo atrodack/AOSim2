@@ -24,5 +24,5 @@ for nR=1:length(RADII)
 	Rav(nR) = mean(mean(ARRAY(SEL)));
 % 	imagesc(SEL); sqar; drawnow;
 % 	Rav(nR) = mean(mean(ARRAY(R>=RADII(nR)-dR/2&R<=RADII(nR)+dR/2)));
-    fprintf('%d: %.1f %.1g\n', nR,RADII(nR),Rav(nR));
+%     fprintf('%d: %.1f %.1g\n', nR,RADII(nR),Rav(nR));
 end

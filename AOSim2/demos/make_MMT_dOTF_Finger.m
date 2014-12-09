@@ -16,7 +16,8 @@ FINGER.name = 'The Finger!';
 [X,Y] = FINGER.COORDS;
 
 % Just put a mask into the grid directly...
-FINGER.grid(~(Y<-2.5 & abs(X-1)<0.25));
+% FINGER.grid(~(Y<-2.5 & abs(X-1)<0.25));
+FINGER.grid(exp(1i*pi/2*double(Y<-2.5 & abs(X-1)<0.25)));
 
 F = AOField(A);
 F.lambda = LAMBDA;
