@@ -125,12 +125,23 @@ classdef AOScreen < AOGrid
 		
         function S = importAPP(S,FITSNAME,FRAME)
             % This is JLC specific.  Read in a PAC APP phase pattern.
+            
+            if(nargin<3)
+                FRAME = 1;
+            end
+            
             HEADER = fits_read_header(FITSNAME);
+            S.resize(double(HEADER.NAXIS1)); % I only support square grids for now.
+            
             START = double([1,1,FRAME]);
             STOP = double([HEADER.NAXIS1,HEADER.NAXIS2,FRAME]);
-            APP = fits_read_image_subset(FITSNAME,START,STOP);
+            if(nargin<3)
+                APP = fits_read_image(FITSNAME);
+            else
+                APP = fits_read_image_subset(FITSNAME,START,STOP);
+            end
             S.grid_ = APP'*(S.lambdaRef/2/pi);
-            S.spacing(HEADER.XSPACING);
+            %S.spacing(HEADER.XSPACING);
         end
         
         function S = addRipple(S,K,amp,phase)
@@ -231,6 +242,8 @@ classdef AOScreen < AOGrid
             % FIELD.planewave*SCREEN*APERTURE;
             % PSF = FIELD.mkPSF(FOV,dFOV);
             % ta dah! (note that this is only a fitting error model)
+            % To add lag error, shift z1 by some pixels of length
+            % wind*lagtime.
         
             grid = S.grid;
             N = round(2*scale/S.dx);
