@@ -43,7 +43,7 @@ for iloop=1:nloops
             %plotCAmpl(squeeze(dcube(:,:,iframe)),.5,[MIN MAX]);
             plotCAmpl(squeeze(dcube(:,:,iframe)),1/2);
         end
-        daspect([1 1 1]);
+        %daspect([1 1 1]);
         title(sprintf('frame %d',iframe));
         
         drawnow;
