@@ -306,9 +306,8 @@ if useatmo == true
         
         
         %% Other Commands
-        drawnow;
-        
-                    M(n) = getframe(h);
+        drawnow
+%         M(n) = getframe(h);
         
         %% Store before looping
         %             Store Stuff
@@ -429,4 +428,4 @@ end
 
 %% Make a Movie
 % Uncomment to generate movie file
-movie2avi(M, 'the_loop_is_closed')
+% movie2avi(M, 'the_loop_is_closed')
