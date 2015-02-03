@@ -8,7 +8,7 @@ function uwphase = uwrap(phase,ALGO)
 % PROGRAMS=uwdiff flyn fmg gold jump lpno mcut pcg qual unmg unwt
 
 PROGRAMS = {'gold','unwt','unmg','flyn','fmg','lpno','mcut','pcg','qual'};
-CODEDIR = '/home/jlc/LAB/'; 
+CODEDIR = '/home/alex/Desktop/LAB/'; 
 
 uwphase = [];
 
