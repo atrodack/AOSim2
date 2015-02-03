@@ -15,9 +15,7 @@ end
 
 %% Initialize Entrance Pupil
 LAMBDA = AOField.JBAND;
-% load('dOTFDM.mat');
-% dOTFDM = DM;
-% clear DM;
+
 make_the_MMT_AO_jlc;
 
 thld = LAMBDA/D*206265;
@@ -67,9 +65,6 @@ ypos = [-2.5,-1.5,0.5,1.5,2.5];
 width = [0.125,0.25,0.33,0.5,0.67];
 
 %% Atmosphere Creation
-% Use Atmosphere for aberration Flag
-% useatmo = false;
-
 
 % Atmosphere
 if useatmo == true;
@@ -99,8 +94,6 @@ end
 %% DM
 A.trueUp;
 DM.setActs(0);
-% DMpokescreen flag
-% DMpokescreen = true;
 
 %DMpokescreen flag check
 if DMpokescreen == true
