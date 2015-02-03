@@ -124,25 +124,16 @@ g = AOGrid(length(A.grid));
 g.constant(1);
 
 
-
-
-
-
-
-
-
-
-
-
-%% do the dOTF
+%% Calibrate the dOTF Sensing
 if useatmo == true
     ps = ATMO;
 else
     ps = DM;
 end
-gain = 1;
 W.calibrateWFS(2.5,1,0.125,Fwfs.planewave,ps);
-% store figure handles
+gain = 1;
+
+% store figure handles for movie making
 h = figure(1);
 
 %% Close the Loop
@@ -151,13 +142,19 @@ if useatmo == true
     for n = 1:200
         %             get time based on FPS value of 550
         t = n/550;
-        %                         update Atmo time property
-        %             ATMO.time = t-1.5;
+
+        % Make the Atmosphere Dynamic
+        % ATMO.time = t-1.5;
+        
+        % Sense the Phase using dOTF
         W.sense(Fwfs.planewave * dOTFDM * A,ATMO);
+        
+        % Work Around to Calculate DM Actuator Pistons
         OPL = W.Phase/k;
         g.grid(OPL);
         pistonvec = g.interpGrid(DM.actuators(:,1),DM.actuators(:,2));
 
+        % Apply to DM for dOTF
         dOTFDM.bumpActs(gain*pistonvec);
         dOTFDM.removeMean;
         dOTFDM.render;
