@@ -147,7 +147,7 @@ if useatmo == true
 else
     ps = DM;
 end
-
+gain = 1;
 W.calibrateWFS(2.5,1,0.125,Fwfs.planewave,ps);
 % store figure handles
 h = figure(1);
@@ -155,7 +155,7 @@ h = figure(1);
 %% Close the Loop
 if useatmo == true
     %% Atmo Screen
-    for n = 1:1
+    for n = 1:200
         %             get time based on FPS value of 550
         t = n/550;
         %                         update Atmo time property
@@ -164,10 +164,11 @@ if useatmo == true
         OPL = W.Phase/k;
         g.grid(OPL);
         pistonvec = g.interpGrid(DM.actuators(:,1),DM.actuators(:,2));
-        dOTFDM.bumpActs(pistonvec);
+
+        dOTFDM.bumpActs(gain*pistonvec);
         dOTFDM.removeMean;
         dOTFDM.render;
-        
+       
         
         if SHWFScheck == true
             WFS.sense(FSHwfs.planewave*ATMO*A*DM);
@@ -307,7 +308,7 @@ if useatmo == true
         %% Other Commands
         drawnow;
         
-%                     M(n) = getframe(h);
+                    M(n) = getframe(h);
         
         %% Store before looping
         %             Store Stuff
@@ -428,4 +429,4 @@ end
 
 %% Make a Movie
 % Uncomment to generate movie file
-% movie2avi(M, 'sorta_working')
+movie2avi(M, 'the_loop_is_closed')
