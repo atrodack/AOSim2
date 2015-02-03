@@ -115,6 +115,8 @@ touch(A);
 
 %% dOTFDM
 dOTFDM = DM.copy;
+offActs = [4,9:12,17:21,25,33:40,51:56];
+dOTFDM.disableActuators(offActs);
 touch(dOTFDM);
 
 
@@ -157,7 +159,7 @@ if useatmo == true
         % Apply to DM for dOTF
         dOTFDM.bumpActs(gain*pistonvec);
         dOTFDM.removeMean;
-        dOTFDM.render;
+
        
         
         if SHWFScheck == true
@@ -167,69 +169,7 @@ if useatmo == true
             DM.removeMean;
         end
         
-        % Plotting Options
-% % %              Plot PSFs, OTFs, magnitude of dOTF, retrieved phase of dOTF
-%         W.show;
-%         
-% % %                  Plot Computed vs. Incident Phase
-%         clf;
-%         subplot(1,2,1)
-%         imagesc(x,y,W.Phase .* A.combined.grid_);
-%         colormap(jet);
-%         colorbar;
-%         axis xy;
-%         bigtitle(sprintf('Computed Phase at t = %0.4f',t),10);
-%         daspect([1,1,1]);
-%         subplot(1,2,2)
-%         Fwfs.show;
-%         imagesc(x,y,ATMO);
-%         colorbar;
-%         bigtitle('Incident Phase',12);
-%         colormap(jet);
-%         axis xy;
-%         daspect([1,1,1]);
-%         
-% % %                         Plot Residual Phase
-%         clf;
-%         subplot(1,2,1)
-%         imagesc(x,y,angle(Fwfs.grid_).*A.combined.grid_);
-%         colormap(jet);
-%         colorbar;
-%         axis xy;
-%         daspect([1,1,1]);
-%         subplot(1,2,2)
-%         imagesc(x,y,angle(Fwfs.grid_).*A.combined.grid_ - W.Phase);
-%         colormap(jet);
-%         colorbar;
-%         axis xy;
-%         daspect([1,1,1]);
-%         
-% % %                         Plot PSFs
-%         clf;
-%         gain = 1;
-%         compphase = W.Phase .* A.combined.grid_;
-%         actualphase = angle(Fwfs.grid_).*A.combined.grid_;
-%         residphase = (actualphase - (gain*compphase));
-%         actualphase = padarray(actualphase,[512,512]);
-%         residphase = padarray(residphase,[512,512]);
-%         img = abs(fftshift(fft2(fftshift(actualphase)))).^2;
-%         img2 = abs(fftshift(fft2(fftshift(residphase)))).^2;
-%         subplot(1,2,1)
-%         imagesc(img);
-%         axis xy;
-%         daspect([1,1,1]);
-%         colormap(gray);
-%         colorbar;
-%         bigtitle(sprintf('t = %0.4f',t),12);
-%         subplot(1,2,2)
-%         imagesc(img2);
-%         axis xy;
-%         daspect([1,1,1]);
-%         colormap(gray);
-%         colorbar;
-%         bigtitle(sprintf('t = %0.4f',t),12);
-        
-        
+        % Plotting Options    
         
         clf;
         N1 = 1; N2 = 2; N3 = 0;
@@ -247,17 +187,26 @@ if useatmo == true
         daspect([1,1,1]);
         axis xy;
         colormap(jet);
-        bigtitle('Corrected PSF',20);
+        bigtitle('dOTF loop PSF',20);
         
         
         subplot(N1+N3,N2+N3,1);
-        k = (2*pi)/LAMBDA;
         imagesc(dOTFDM.grid .* A.grid);
         daspect([1,1,1]);
         axis xy;
         colormap(jet);
         colorbar;
-        bigtitle('Calculated OPL',20);
+        bigtitle('dOTFDM Shape',20);
+        
+        subplot(2,3,3)
+        F.planewave * ATMO * A;
+        uncorrpsf = F.mkPSF(FOV,PLATE_SCALE);
+        F.touch;
+        imagesc(uncorrpsf(plotwin,plotwin));
+        daspect([1,1,1]);
+        axis xy;
+        colormap(jet);
+        bigtitle('Uncorrected PSF',20);
         
         if SHWFScheck == true
             subplot(2,3,4)
@@ -277,16 +226,6 @@ if useatmo == true
             axis xy;
             colormap(jet);
             bigtitle('AO loop PSF',20);
-            
-            subplot(2,3,6)
-            F.planewave * ATMO * A;
-            uncorrpsf = F.mkPSF(FOV,PLATE_SCALE);
-            F.touch;
-            imagesc(uncorrpsf(plotwin,plotwin));
-            daspect([1,1,1]);
-            axis xy;
-            colormap(jet);
-            bigtitle('Uncorrected PSF',20);
             
             
         end
@@ -315,13 +254,21 @@ if useatmo == true
     
 elseif DMpokescreen == true
     %% Use DM poke Screen
-    for n = 1:1
+    for n = 1:50
         %             get time based on FPS value of 550
         t = n/550;
         W.sense(Fwfs.planewave * g,DM);
+        
+        % Work Around to Calculate DM Actuator Pistons
         OPL = W.Phase/k;
-        wave = exp((1*2*pi*1i/F.lambda)*OPL);
-        g.setgrid_(1*wave);
+        g.grid(OPL);
+        pistonvec = g.interpGrid(DM.actuators(:,1),DM.actuators(:,2));
+
+        % Apply to DM for dOTF
+        dOTFDM.bumpActs(gain*pistonvec);
+        dOTFDM.removeMean;
+        dOTFDM.render;
+       
         
         %             if SHWFScheck == true
         %                 WFS.sense(FSHwfs.planewave*ATMO*A*DM);
@@ -339,7 +286,7 @@ elseif DMpokescreen == true
         N1 = 1; N2 = 2;
         
         subplot(N2,N2,2);
-        F2.planewave * DM * A * g;
+        F2.planewave * DM * A * dOTFDM;
         psfplot = F2.mkPSF(FOV,PLATE_SCALE);
         [sizex,sizey] = size(psfplot);
         plotwin = floor((sizex/2))- round(floor(sizex/2)/3) : floor(sizex/2) + round(floor(sizex/2)/3);
@@ -352,12 +299,12 @@ elseif DMpokescreen == true
         
         
         subplot(N2,N2,1);
-        imagesc(OPL.*A.grid);
+        imagesc(dOTFDM.grid .* A.grid);
         daspect([1,1,1]);
         axis xy;
         colormap(jet);
         colorbar;
-        bigtitle('Calculated OPL',20);
+        bigtitle('dOTFDM Shape',20);
         
         subplot(N2,N2,3)
         imagesc(DM.grid .* A.grid);

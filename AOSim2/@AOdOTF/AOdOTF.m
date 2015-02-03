@@ -222,7 +222,7 @@ classdef AOdOTF < AOField
             colormap(gray);
             daspect([1 1 1]);
             axis xy;
-            axis off;
+%             axis off;
         end
         
         
