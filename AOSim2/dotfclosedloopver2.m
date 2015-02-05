@@ -19,7 +19,7 @@ LAMBDA = AOField.JBAND;
 make_the_MMT_AO_jlc;
 
 thld = LAMBDA/D*206265;
-FOV = 100 * thld;
+FOV = 150 * thld;
 PLATE_SCALE = thld/3;
 
 
@@ -46,8 +46,10 @@ end
 %% Field Initialization
 F = AOField(A);
 F.FFTSize = 1024;
+% F.lambda = LAMBDA;
 F2 = AOField(A);
 F2.FFTSize = 1024;
+% F2.lambda = LAMBDA;
 Fwfs = AOField(A);
 Fwfs.lambda = F.lambda; 
 Fwfs.FFTSize = 1024;
@@ -60,9 +62,7 @@ W = AOdOTF(A,FOV,PLATE_SCALE);
 [x,y] = W.coords;
 % test multiple finger positions/widths
 numtests = 1;
-xpos = [-2,-1,0,1,2];
-ypos = [-2.5,-1.5,0.5,1.5,2.5];
-width = [0.125,0.25,0.33,0.5,0.67];
+
 
 %% Atmosphere Creation
 
@@ -115,7 +115,7 @@ touch(A);
 
 %% dOTFDM
 dOTFDM = DM.copy;
-offActs = [4,9:12,17:21,25,33:40,51:56];
+offActs = [19:21,25,40];
 dOTFDM.disableActuators(offActs);
 touch(dOTFDM);
 
@@ -132,7 +132,7 @@ if useatmo == true
 else
     ps = DM;
 end
-W.calibrateWFS(2.5,1,0.125,Fwfs.planewave,ps);
+W.calibrateWFS(3.15,0,0.1,Fwfs.planewave);
 gain = 1;
 
 % store figure handles for movie making
@@ -141,7 +141,7 @@ h = figure(1);
 %% Close the Loop
 if useatmo == true
     %% Atmo Screen
-    for n = 1:200
+    for n = 1:100
         %             get time based on FPS value of 550
         t = n/550;
 
@@ -186,36 +186,43 @@ if useatmo == true
         imagesc(psfplot(plotwin,plotwin));
         daspect([1,1,1]);
         axis xy;
+        axis off;
         colormap(jet);
-        bigtitle('dOTF loop PSF',20);
+        bigtitle('dOTF loop PSF',40);
         
         
         subplot(N1+N3,N2+N3,1);
-        imagesc(dOTFDM.grid .* A.grid);
+        imagesc(x,y,dOTFDM.grid .* A.grid);
         daspect([1,1,1]);
         axis xy;
         colormap(jet);
         colorbar;
-        bigtitle('dOTFDM Shape',20);
+        caxis([-3e-6,3e-6]);
+        bigtitle(sprintf('DM Shape from dOTF Sensing at n = %0.3f',n),40);
         
-        subplot(2,3,3)
-        F.planewave * ATMO * A;
-        uncorrpsf = F.mkPSF(FOV,PLATE_SCALE);
-        F.touch;
-        imagesc(uncorrpsf(plotwin,plotwin));
+        subplot(N1+N3,N2+N3,3)
+        imagesc(x,y,W.Phase / (2*pi));
         daspect([1,1,1]);
         axis xy;
+        colorbar;
         colormap(jet);
-        bigtitle('Uncorrected PSF',20);
+        caxis([-1,1]);
+        bigtitle('dOTF Sensed Phase',40);
+
+        
+        
+        
+        
         
         if SHWFScheck == true
             subplot(2,3,4)
-            imagesc(DM.grid .* A.grid);
+            imagesc(x,y,DM.grid .* A.grid);
             daspect([1,1,1]);
             axis xy;
             colormap(jet);
             colorbar;
-            bigtitle(sprintf('DM Shape from SHWFS at t = %0.3f',n),20);
+            caxis([-3e-6,3e-6])
+            bigtitle(sprintf('DM Shape from SHWFS at n = %0.3f',n),40);
             
             subplot(2,3,5)
             F.planewave*ATMO*A*DM;
@@ -224,9 +231,20 @@ if useatmo == true
             imagesc(PSFplot(plotwin,plotwin))
             daspect([1,1,1]);
             axis xy;
+            axis off;
             colormap(jet);
-            bigtitle('AO loop PSF',20);
+            bigtitle('AO loop PSF',40);
             
+            subplot(2,3,6)
+            F.planewave * ATMO * A;
+            uncorrpsf = F.mkPSF(FOV,PLATE_SCALE);
+            F.touch;
+            imagesc(uncorrpsf(plotwin,plotwin));
+            daspect([1,1,1]);
+            axis xy;
+            axis off;
+            colormap(jet);
+            bigtitle('Uncorrected PSF',40);
             
         end
         
@@ -236,7 +254,7 @@ if useatmo == true
         
         %% Other Commands
         drawnow
-%         M(n) = getframe(h);
+        M(n) = getframe(h);
         
         %% Store before looping
         %             Store Stuff
@@ -365,4 +383,4 @@ end
 
 %% Make a Movie
 % Uncomment to generate movie file
-% movie2avi(M, 'the_loop_is_closed')
+movie2avi(M, 'the_loop_is_closed')

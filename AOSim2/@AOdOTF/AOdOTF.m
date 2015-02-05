@@ -251,6 +251,11 @@ classdef AOdOTF < AOField
             center = [round(sizex/2),round(sizey/2)];
             shift = [shift_point(1) - center(2),shift_point(2) - center(1)];
             
+            
+            %Use Complex Conjugate
+            %Phase * conjugate(Phase) should remove the complex part, and
+            %leave the amplitude^2 with the real phase
+            
             phase_ref = phase(center(1),center(2));
             AOdOTF.unwrapphase;
             phase = AOdOTF.Phase - phase_ref;
@@ -263,8 +268,6 @@ classdef AOdOTF < AOField
             AOdOTF.Phase = phase;
             
             phase = circshift(phase,-shift);
-            
-            phase = phase - phase_ref;
             
             
             % resize to edge of Pupil
