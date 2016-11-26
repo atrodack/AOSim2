@@ -13,10 +13,15 @@ classdef AOWFS < AOGrid & AODetector
     properties(GetAccess='public',SetAccess='public')
         usePyr; % allows user to select pyramid (1) or SH (0)
     end
+    properties(GetAccess = 'public', SetAccess = 'protected')
+		ZernikeTip_ = {};        % Phase screen for x-tip Zernike mode (global tip)
+		ZernikeTilt_ = {};       % Phase screen for y-tilt Zernike mode (global tilt)
+	end
     
     methods
         % Constructor
-        function WFS = AOWFS(APER,spacing,usePyramid,maskName)
+        function WFS = AOWFS(APER,spacing,usePyramid,maskName,D)
+            if nargin < 5, D = APER.estimateD(); end     % Should provide D for globalTipTilt method
             if nargin < 4  || isempty(maskName), maskName=0;end
             if nargin < 3  || isempty(usePyramid), usePyramid=0; end
             BBox = APER.BBox;
@@ -41,6 +46,27 @@ classdef AOWFS < AOGrid & AODetector
             WFS.init(APER,0.2); % I just pick a masking threshold here.
             
 
+			% Compute screens for projecting global aperture tip/tilt
+			pupilMask = (APER.grid >= 0.5);
+			pupilComplimentMask = (pupilMask == 0);
+			% 1/sum(sum(pupilMask)) to normalize dot product by pupil area
+			% second 2.0 since 1 unit of Noll tip/tilt mode is 2.0 units of OPD at r=1
+			% 1/(D / 2.0) small angle approximation for slope angle in radians
+			ttscale = 2.0 / ((D / 2.0) * sum(sum(pupilMask)));
+			WFS.ZernikeTip_ = AOScreen(APER);                % need size and coordinates
+			WFS.ZernikeTilt_ = AOScreen(APER);               % need size and coordinates
+			WFS.ZernikeTip_.name = 'Tip';
+			WFS.ZernikeTip_.zero;
+			WFS.ZernikeTip_.addZernike(1, -1, ttscale, D);   % positive tip with increasing columns
+			tempGrid = WFS.ZernikeTip_.grid;
+			tempGrid(pupilComplimentMask) = 0;
+			WFS.ZernikeTip_.grid(tempGrid);
+			WFS.ZernikeTilt_.name = 'Tilt';
+			WFS.ZernikeTilt_.zero;
+			WFS.ZernikeTilt_.addZernike(1, 1, -ttscale, D);  % positive tilt with increasing rows
+			tempGrid = WFS.ZernikeTilt_.grid;
+			tempGrid(pupilComplimentMask) = 0;
+			WFS.ZernikeTilt_.grid(tempGrid);
         end
         
         function N = nSubAps(WFS)
@@ -439,6 +465,24 @@ classdef AOWFS < AOGrid & AODetector
             valid = valid(:);
             SLOPES = [real(g(valid));imag(g(valid))];
         end
+
+		function [tip, tilt] = globalTipTilt(WFS, ATMO)        % radians
+			% Projection of ATMO onto Zernike modes gives tip/tilt in radians (use local copy)
+			A = AOScreen(WFS.ZernikeTip_);    % need size and coordinates
+ 			A * ATMO;                         % dot product with Zernike mode (handles interpolation)
+			tip = sum(sum(A.grid));
+			% figure(6);
+			% ATMO.show;
+			% figure(4);
+			% WFS.ZernikeTip_.show;
+ 			% figure(5);
+ 			% A.show;
+			% drawnow;
+			A = AOScreen(WFS.ZernikeTilt_);   % need size and coordinates
+ 			A * ATMO;                         % dot product with Zernike mode (handles interpolation)
+			tilt = sum(sum(A.grid));
+ 			% input 'ATMO dot Tip: Press ENTER to Continue...'
+		end
     end
     
     %% static methods

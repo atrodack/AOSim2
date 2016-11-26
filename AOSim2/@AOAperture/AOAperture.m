@@ -175,6 +175,7 @@ classdef AOAperture < AOSegment
 			
 			A.cleanup();
             A.combined = AOSegment;
+            A.combined.name = [A.name ' combined grid'];
             A.combined.spacing(A.spacing);
             A.combined.setBBox(A.BBox,2*A.dx); % WARNING: padding is hardwired here.
             A.combined.zero;
@@ -190,6 +191,7 @@ classdef AOAperture < AOSegment
 				
 				offset_save = A.segList{n}.Segment.Offset; % save in case important.
                 A.segList{n}.Segment.Offset   = A.segList{n}.Offset;
+                %fprintf('AOAperture.render: segment %d Offset = [%f %f]\n',n,A.segList{n}.Segment.Offset);
                 
 				A.combined + A.segList{n}.Segment; % This actually does the rendering.
                 % plotCAmpl(A.combined.grid_); sqar; % DEBUG!!!
@@ -274,8 +276,40 @@ classdef AOAperture < AOSegment
 				A.segList{n}.Segment.Offset = [0 0]; 
 			end
 			touch(A);
-		end
-		
+        end
+
+        function SEGCOORDS = segCoordList(A)
+            % SEGCOORDS = AOAperture.segCoordList(A)
+            % List the centers of all the segments in the AOAperture.
+            
+            N = length(A.segList);
+            
+            SEGCOORDS = zeros(N,2);
+            for n=1:N
+                SEGCOORDS(n,:) = A.segList{n}.Offset;
+            end
+        end
+
+        function PTT = PTT(A,PTT)
+            % PTT = PTT(A)
+            % Return or set the [Piston,Tip,Tilt] for all the segments in the AOAperture.
+            
+            N = length(A.segList);
+            
+            if(nargin>1)
+                A.setPistons(PTT(:,1));
+                A.setTipTilts(PTT(:,2:3));
+            end
+            
+            PTT = zeros(N,3);
+            for n=1:N
+                PTT(n,1) = A.segList{n}.piston;
+                PTT(n,2:3) = A.segList{n}.tiptilt;
+            end
+        end
+
+        
+        
 		function show(A) % overloading the AOGrid function.
 			A.center.plotC;
 			% plotCAmpl(A.grid,1/2);

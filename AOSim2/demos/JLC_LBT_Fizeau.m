@@ -21,6 +21,11 @@ NYPIX = 2;
 A1Center = [0 -7.2085];
 A2Center = [0  7.2085];
 
+% Center = A1Center;
+
+ALCenter = A1Center;
+ARCenter = A2Center;
+
 %% Define the working and combining fields
 
 Fwfs = AOField(A); % start centered on the origin.

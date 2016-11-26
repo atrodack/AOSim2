@@ -65,7 +65,7 @@ classdef AOSegment < AOGrid
             else
                 OPL = obj.piston;
             end
-            
+
             if(nargin==1)
                 if(obj.tiptilt==0)
                     if(obj.piston==0)  % no TT,no piston
@@ -75,8 +75,8 @@ classdef AOSegment < AOGrid
                     end
                 else  % piston and Tip tilt.
                     [X,Y] = COORDS(obj);
-                    X0 = obj.Offset(1);
-                    Y0 = obj.Offset(2);
+                    X0 = obj.Offset(2);
+                    Y0 = obj.Offset(1);
                     g = exp((1i*2*pi/obj.lambdaRef)*...
                         (OPL+obj.tiptilt(1)*(X-X0) +...
                         obj.tiptilt(2)*(Y-Y0))) .* ...
@@ -159,6 +159,40 @@ classdef AOSegment < AOGrid
         function a = mtimes(a,b)
             a = mtimes@AOGrid(a,b);
         end
+        
+        function D = estimateD(a)
+        % D = estimateD(a)
+        % Estimate the pupil diameter from the grid.
+        
+        CUTOFF = 0.1;
+        
+        PRJ = find(max((a.abs>CUTOFF),[],2));
+        D1 = (max(PRJ)-min(PRJ))*a.dx;
+        
+        PRJ = find(max((a.abs>CUTOFF),[],1));
+        D2 = (max(PRJ)-min(PRJ))*a.dy;
+
+        D = max(D1,D2);
+        
+        end
+        
+
+        function AREA = estimateArea(a)
+            % AREA = estimateArea(a)
+            
+            AREA = sum(abs(a.grid_(:)))*a.dx*a.dy;
+            
+        end
+
+        function A = apodize(A,param)
+            % A = A.apodize(param);
+            % Set the grid to an apodizing function.
+            % Right now it only supports chebyshev, which is very close to
+            % the Slepian solution ("Generalize prolate spheroidal").
+            
+            A.grid(chebwin(A.nx,param)*chebwin(A.ny,param)');
+        end
+        
     end
     
     methods(Static=true)

@@ -21,7 +21,7 @@
 MAX_MODES = 56;
 
 D = 8;
-% obstruction = 0.2;
+obstruction = 0.2;
 % dx = 0.02;
 dx = 1/30;
 
@@ -48,7 +48,7 @@ A.addSegment(Seg);
 A.show;
 colormap(gray);
 
-save data/ObsCirc_Model_working A D  % Paranoid.
+% save data/ObsCirc_Model_working A D  % Paranoid.
 
 % Now run something like the canned_GMT script, but don't load anything in
 % first.  

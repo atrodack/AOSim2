@@ -1,4 +1,4 @@
-classdef AOAtmo < AOGrid
+classdef AOAtmo < AOScreen
 	% AOAtmo: AOAtmo class from AOSim2.
 	%
 	% This class holds AOScreens to define will hold the wavefront as meters of displacement, which makes
@@ -7,45 +7,55 @@ classdef AOAtmo < AOGrid
 	% Written by: Johanan L. Codona, Steward Observatory: CAAO
 	% Feb. 21, 2009
 	% 20090418, JLCodona.  AOSim2.
+    % AOSim2 change log now recorded in the git log.
 	
 	% properties
 	properties(Access='public')
-		layers = {};
-		BEACON; % [x,y,z] a single point.
-		time = 0;
-		GEOMETRY = true;
-		z = 0;
+		layers = {};                    % List of AOScreens.
+		BEACON = [ 0 0 1.5e11 ]*100;    % [x,y,z] a single point. Defaults to 100 AU.
+		time = 0;                       % Set this for the observation time.  Affects wind.
+		GEOMETRY = true;                % Include geometric OPL as well as aberrations.
+		z = 0;                          % Location of the OUTPUT for this object.
 	end
-	
+
 	methods
 		% Constructor
 		function ATMO = AOAtmo(varargin)
-			ATMO = ATMO@AOGrid(varargin);
+			ATMO = ATMO@AOScreen(varargin);
 		end
 		
 		% Operations
 		function ATMO = addLayer(ATMO,screen,alt)
+            % ATMO = addLayer(ATMO,screen,alt)
 			n = length(ATMO.layers)+1;
 			L = struct; % start building the layer.
 			L.name = sprintf('Layer %d:%s',n,screen.name);
 			if(nargin>2)
 				screen.altitude = alt;
-			end
+            end
+            
+            screen.lambdaRef = ATMO.lambdaRef; % If this causes inconvenience, please tell JLCodona.
+            
 			L.screen = screen;
 			L.Wind = [0 0];
 			
 			L.ignore = false;
 			
 			ATMO.layers{end+1} = L;
+            ATMO.touch;
+            
 			fprintf('AOAtmo now has %d layers.\n',length(ATMO.layers));
 		end
 		
 		function ATMO = deleteLayer(ATMO,n)
+		%ATMO = deleteLayer(ATMO,n)
 			if(n>0 && n<=length(ATMO.layers))
 				ATMO.layers(n) = [];
 			else
 				error('AOAtmo: cannot delete layer %d.',n);
-			end
+            end
+            
+            ATMO.touch;
 		end
 		
 		function ATMO = disp(ATMO)
@@ -57,26 +67,31 @@ classdef AOAtmo < AOGrid
 			end
 		end
 
-		
 		function n = nLayers(ATMO)
+		%n = nLayers(ATMO)
 			n = length(ATMO.layers);
 		end
 		
 		function ATMO = touch(ATMO)
+		%ATMO = touch(ATMO)
 			for n=1:ATMO.nLayers
 				ATMO.layers{n}.screen.touch;
 			end
         end
 		
         function ATMO = make(ATMO)
+        %ATMO = make(ATMO)
         
             for n=1:ATMO.nLayers
+                fprintf('Rendering screen %d: %s\n',n,ATMO.layers{n}.screen.name);
                  ATMO.layers{n}.screen.make;
             end
+        
+            ATMO.touched = false;
         end
         
-        
 		function ATMO = setBeacon(ATMO,x,y,z)
+		%ATMO = setBeacon(ATMO,x,y,z)
 			if(nargin==4)
 				ATMO.BEACON = [ x y z ];
 			else
@@ -89,18 +104,28 @@ classdef AOAtmo < AOGrid
 		end
 		
 		function ATMO = useGeometry(ATMO,yn) % include geometry factors in results?
+		%ATMO = useGeometry(ATMO,yn) % include geometry factors in results?
 			ATMO.GEOMETRY = yn;
 		end
 		
 		function ATMO = setObsTime(ATMO,t) % set observation time.
+		%ATMO = setObsTime(ATMO,t) % set observation time.
 			ATMO.time = t;
-		end
+
+            for n=1:ATMO.nLayers
+                ATMO.layers{n}.screen.Offset = ATMO.layers{n}.Wind*ATMO.time;
+            end
+
+        
+        end
 		
 		function ATMO = setObsAltitude(ATMO,z) % set default observation altitude.
+		%ATMO = setObsAltitude(ATMO,z) % set default observation altitude.
 			ATMO.z = z;
 		end
 		
 		function R = geomDistances(ATMO,X,Y,z) % Distances from the BEACON.
+		%R = geomDistances(ATMO,X,Y,z) % Distances from the BEACON.
 			if(nargin<4)
 				z = 0;
 			end
@@ -109,19 +134,26 @@ classdef AOAtmo < AOGrid
 			% end
 			
 			if(isempty(ATMO.BEACON))
-				error('The BEACON coordinates are undefined.');
+				fprintf('The BEACON is undefined. Using FLAT wavefront.');
 			end
 			
-			if(isa(X,'AOGrid'))
-				G = X;
-				[X,Y] = COORDS(G);
-				R = sqrt((X-ATMO.BEACON(1)).^2+(Y-ATMO.BEACON(2)).^2+(z-ATMO.BEACON(3)).^2);
-			else
-				R = sqrt((X-ATMO.BEACON(1)).^2+(Y-ATMO.BEACON(2)).^2+(z-ATMO.BEACON(3)).^2);
-			end
+            Rmachine = 1e-10/eps; % max distance with Angstrom accuracy and machine resolution.
+			
+            dz = abs(z-ATMO.BEACON(3));
+            if(isa(X,'AOGrid'))
+				[X,Y] = X.COORDS;
+            end
+            
+            dX2 = (X-ATMO.BEACON(1)).^2+(Y-ATMO.BEACON(2)).^2;
+            if(abs(dz)<Rmachine) % near machine distances
+                R = sqrt(dX2 + dz^2)-dz; % remove the main part.
+            else % far machine distances.
+                R = dX2/2/abs(dz);
+            end
 		end
 		
 		function [X,Y] = scaleCone(ATMO,X,Y,z,znew,SOURCE) % Shrink to the SOURCE (defaults to BEACON).
+		% [X,Y] = scaleCone(ATMO,X,Y,z,znew,SOURCE) % Shrink to the SOURCE (defaults to BEACON).
 			if(nargin<6)
 				SOURCE = ATMO.BEACON;
 			end
@@ -140,24 +172,31 @@ classdef AOAtmo < AOGrid
 		end
 		
 		function g = grid(ATMO,nugrid)
+		% g = grid(ATMO,nugrid)
 			if(ATMO.nLayers == 0)
 				g = grid@AOScreen(ATMO,nugrid);
 				return;
-			end
-			
+            end
+
+            if(ATMO.touched)
+                ATMO.make;
+            end
+            
 			[X,Y] = COORDS(ATMO);
 			g = ATMO.OPL(X,Y,ATMO.z);
-			
+            ATMO.grid_ = g;
 		end
 		
 		% ignore flag management
 		function ATMO = ignoreAllLayers(ATMO)
+		% ATMO = ignoreAllLayers(ATMO)
 			for n=1:ATMO.nLayers
 				ATMO.layers{n}.ignore = true;
 			end
 		end
 		
 		function ATMO = includeAllLayers(ATMO)
+		% ATMO = includeAllLayers(ATMO)
 			for n=1:ATMO.nLayers
 				ATMO.layers{n}.ignore = false;
 			end
@@ -165,6 +204,7 @@ classdef AOAtmo < AOGrid
 		
 		% path integration functions
 		function opl = OPL_(ATMO,X,Y,z,SOURCE)
+		% opl = OPL_(ATMO,X,Y,z,SOURCE)
 			opl = zeros(size(X));
 			
 			% fprintf('DEBUG: OPL_ layers: ');
@@ -194,6 +234,7 @@ classdef AOAtmo < AOGrid
 		end
 		
 		function opl = OPL(ATMO,varargin)
+		% opl = OPL(ATMO,varargin)
 			% OPL: valid arg lists... (Always uses ATMO BEACON.)
 			%      Nothing. Uses internal phase screen.  Don't use this as
 			%      it confuses things.
@@ -248,8 +289,11 @@ classdef AOAtmo < AOGrid
 			end
         end
         
-        function r0 = totalFriedScale(ATMO,lambda)
-
+        %% original function, works for a star.
+        function r0 = totalFriedScaleStar(ATMO,lambda)
+        % r0 = totalFriedScaleStar(ATMO,lambda)
+        % This returns the total r0 for a starlight beacon.
+        
             if(nargin<2)
                 lambda = AOField.VBAND;
             end
@@ -263,7 +307,83 @@ classdef AOAtmo < AOGrid
             r0 = (0.423*(2*pi/lambda)^2*SLABS)^(-3/5); % see e.g. Roddier or Fried or Tatarskii or ANYBODY!
         end
         
+        %%
+        function r0 = totalFriedScale(ATMO,lambda)
+            % r0 = totalFriedScale(ATMO,lambda)
+            % This computes the Fried length for the BEACON source.
+            
+            if(nargin<2)
+                lambda = ATMO.lambdaRef;
+            end
+
+            SOURCE = [ 0 0 ATMO.BEACON(3)]; % measuring stick
+
+            SLABS = 0;
+
+            for n=1:length(ATMO.layers)
+                [rho,~] = ATMO.scaleCone(1,0,ATMO.z,ATMO.layers{n}.screen.altitude,SOURCE);
+                if(rho<=0 | ATMO.layers{n}.ignore )
+                    continue;
+                end
+                SLABS = SLABS + ATMO.layers{n}.screen.thickness * ATMO.layers{n}.screen.Cn2 * rho^(5/3);
+            end
+
+            r0 = 0.1847 * lambda^(6/5) / SLABS^(3/5); 
+            
+            %r0 = (0.423*(2*pi/lambda)^2*SLABS)^(-3/5); % see e.g. Roddier or Fried or Tatarskii or ANYBODY!
+        end
         
         
+        function THICKNESSES = listThickness(ATMO)
+        % THICKNESSES = listThickness(ATMO)
+            THICKNESSES = nan(1,ATMO.nLayers);
+        
+            for n=1:ATMO.nLayers
+                THICKNESSES(n) = ATMO.layers{n}.screen.thickness;
+            end
+        end
+        
+        function HEIGHTS = listHeights(ATMO)
+        % HEIGHTS = listHeights(ATMO)
+            HEIGHTS = nan(1,ATMO.nLayers);
+        
+            for n=1:ATMO.nLayers
+                HEIGHTS(n) = ATMO.layers{n}.screen.altitude;
+            end
+        end
+        
+        function CN2 = listCn2(ATMO)
+        % CN2 = listCn2(ATMO)
+            for n=1:ATMO.nLayers
+                CN2(n) = ATMO.layers{n}.screen.Cn2;
+            end
+        end
+        
+		function [xoffset, yoffset] = tracerays(ATMO, WFS, OBJECTZ, OBJECTD, SAMPLES)  % radians
+			OBJECTR = OBJECTD / 2.0;
+			BEACONR = linspace(-OBJECTR, OBJECTR, SAMPLES);
+
+			ATMO.useGeometry(false);   % Turning off the geometry is like focusing on the beacon
+
+			xoffset = zeros(SAMPLES);
+			yoffset = zeros(SAMPLES);
+			
+			totalrays = SAMPLES^2;
+			raycheckpoint = round(0.1 * totalrays);
+			raynum = 0;
+			for n = 1:SAMPLES
+				for m = 1:SAMPLES
+					raynum = raynum + 1;
+					% if (mod(raynum, raycheckpoint) == 0)
+						% fprintf('Ray trace percent complete: %d\n', round(100 * raynum / totalrays));
+					% end
+				
+					ATMO.setBeacon([BEACONR(n) BEACONR(m) OBJECTZ]);
+					[btip, btilt] = WFS.globalTipTilt(ATMO);
+					xoffset(m, n) = btip;
+					yoffset(m, n) = btilt;
+				end
+			end
+       end
     end
 end

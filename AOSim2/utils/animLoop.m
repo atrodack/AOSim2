@@ -38,7 +38,8 @@ for iloop=1:nloops
     for iframe=1:NT
         if(isreal(dcube))
             imagesc(squeeze(dcube(:,:,iframe)),[MIN MAX]);
-            colorbar;
+            daspect([1 1 1]);
+            %colorbar;
         else
             %plotCAmpl(squeeze(dcube(:,:,iframe)),.5,[MIN MAX]);
             plotCAmpl(squeeze(dcube(:,:,iframe)),1/2);

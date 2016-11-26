@@ -59,7 +59,10 @@ function F = propagate(F,dz,REGULARIZE,PADDED)
   if(nargin>4 | PADDED>F.nx)
       NPAD = round(NFRESNEL*Rf./DX);
       fprintf('DEBUG: PADDING the field array by [%d,%d] pixels.\n',NPAD);
-      field = padarray(field,NPAD,'post');
+      %field = padarray(field,NPAD,'post');
+      %field = padarray(field,NPAD,F.subGrid(1,1),'post'); % pad with what is at the edge.
+      field = [field,fliplr(field(:,end-NPAD+1:end))];
+      field = [field;flipud(field(end-NPAD+1:end,:))];
   end
   
   dK = 2*pi./(size(field) .* DX);

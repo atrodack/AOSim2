@@ -24,18 +24,18 @@ load data/MMT_DM336_Actuators.mat
 PMMT(:,5) = 0.03;
 PMMT(2,5) = 0.02;
 
-PMMT(3,:) = [];
+% PMMT(3,:) = [];
 
-Seg = AOSegment;
-Seg.name = 'MMT Primary';
-Seg.pupils = PMMT;
-Seg.make;
+A = AOSegment;
+A.name = 'MMT';
+A.pupils = PMMT;
+A.make.show;
 
 clf;
 % Seg.touch.make.show;
-A = AOAperture;
-A.name = 'MMT';
-A.addSegment(Seg);
+% A = AOAperture;
+% A.name = 'MMT';
+% A.addSegment(Seg);
 A.show;
 colormap(gray);
 

@@ -25,7 +25,7 @@ YBINS = (min(NUMy):max(NUMy))*pixely;
 NUMy = NUMy - min(NUMy) + 1;
 Ny = max(NUMy);
 
-if(Nx>1000 || Ny>1000)
+if(Nx>5000 || Ny>5000)
     fprintf('Are you sure? The dims would be %dx%d\n',Nx,Ny);
     return;
 end

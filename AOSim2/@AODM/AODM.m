@@ -195,17 +195,28 @@ classdef AODM < AOScreen
 			% COORDS is a list of [x,y] actuator coords.
 			% segNum is really just a label for plotting and sorting.  All
 			% actuators are treated alike and together.
+            % CENTER: coord vector or an AOSim2 object to use as the bias
+            % for the actuator coords.
 			
 			if(nargin<3)
 				segNum = nan;
 			end
 			
 			if(nargin>3)
-				if(isa(CENTER,'AOAperture'))
-					segCenter = CENTER.segList{segNum}.Offset;
-					
+				if(isa(CENTER,'AOAperture') || isnan(segNum))
+                    if(isempty(CENTER.segList))
+                        segCenter = CENTER.Offset;
+                    else
+                        segCenter = CENTER.segList{segNum}.Offset;
+                    end
+                    
 					COORDS(:,1) = COORDS(:,1) + segCenter(2);
 					COORDS(:,2) = COORDS(:,2) + segCenter(1);
+                elseif(isa(CENTER,'AOGrid'))
+					c = CENTER.Offset;
+					
+					COORDS(:,1) = COORDS(:,1) + c(2);
+					COORDS(:,2) = COORDS(:,2) + c(1);
 				else
 					COORDS(:,1) = COORDS(:,1) + CENTER(2);
 					COORDS(:,2) = COORDS(:,2) + CENTER(1);
@@ -231,9 +242,52 @@ classdef AODM < AOScreen
 			n = size(DM.actuators,1);
 		end
 		
-		function DM = defineBC(DM,radius,npoints)
-			theta = (1:npoints)'/npoints*2*pi;
-			DM.bconds = [cos(theta) sin(theta)] * radius;
+		function DM = defineBC(DM,radius,npoints,PATTERN)
+            if nargin == 3
+                PATTERN = 'circle';
+            end
+          
+            if strcmp(PATTERN,'circle')
+                theta = (1:npoints)'/npoints*2*pi;
+                DM.bconds = [cos(theta) sin(theta)] * radius;
+                
+            elseif strcmp(PATTERN,'square')
+                %change the meaning of npoints
+                npoints_per_side = npoints;
+                % Syntax requires this to be at least 2, which puts a BC on each corner
+                if npoints_per_side == 1
+                    npoints_per_side = 2;
+                end
+                
+                points = linspace(-radius,radius,npoints_per_side);
+                
+                % Initialize vectors
+                top = zeros(npoints_per_side,2);
+                bottom = top;
+                left = top;
+                right = top;
+                
+                for ii = 1:npoints_per_side
+                    top(ii,1) = points(ii);
+                    top(ii,2) = radius;
+                    bottom(ii,1) = points(ii);
+                    bottom(ii,2) = -radius;
+                    left(ii,1) = -radius;
+                    left(ii,2) = points(ii);
+                    right(ii,1) = radius;
+                    right(ii,2) = points(ii);
+                end
+                
+                % Remove duplicate points
+                left = left(2:end-1,:);
+                right = right(2:end-1,:);
+                
+                % Concatenate and place into object
+                DM.bconds = vertcat(top,left,bottom,right);
+            else
+                error('PATTERN must be the string circle or square');
+
+            end
 			
 			DM.bconds(:,1) = DM.bconds(:,1) + DM.Offset(2);
 			DM.bconds(:,2) = DM.bconds(:,2) + DM.Offset(1);

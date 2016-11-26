@@ -1,4 +1,4 @@
-function [AOA] = make(AOA)
+function [AOA] = make1(AOA)
 
 % MAKE: Build the AOAperture grid.
 % USAGE:

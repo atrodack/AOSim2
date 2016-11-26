@@ -14,6 +14,10 @@ classdef AOField < AOGrid
         LBAND = 3.8e-6;
 		MBAND = 4.769e-6;
 		NBAND = 10.472e-6;
+        BrGamma = 2.165e-6; % Brackett Gamma
+        HAlpha = 0.6563e-6; % Hydrogen Alpha 
+        PaBeta =1.2818e-6;  % Paschen Beta
+        OIII = 0.5007e-6;   % Oxygen III
 		
 		Rayleigh_LGS = 532e-9;
 		Sodium_LGS = 589e-9;
@@ -45,13 +49,12 @@ classdef AOField < AOGrid
             
             halo = F.fft; % do this first to initialize the buffers, etc.
             
-            k = 2*pi/F.lambda;
             [kx,ky] = kcoords(F);
             
             % This is the size of the FFT pixels...
             dTH = F.dk/F.k*206265;
-            thx_ = kx/k*206265;
-            thy_ = ky/k*206265;
+            thx_ = kx/F.k*206265;
+            thy_ = ky/F.k*206265;
             
             if(nargin<3)
                 dth = median(diff(thx_));
@@ -132,9 +135,12 @@ classdef AOField < AOGrid
 			k = 2*pi/A.lambda;
 			THX = KX/k;
 			THY = KY/k;
-		end
+        end
 		
 		function a = mtimes(a,b)
+		% function a = mtimes(a,b)
+        % This is overloaded to compute smart "times" operations for AOFields.
+        
 			if(isa(b,'AOPhaseScreen'))
 				if(isCommensurate(a,b))
 					if(isPhase(b))
@@ -165,27 +171,36 @@ classdef AOField < AOGrid
 					MIRROR = 2;
 				else
 					MIRROR = 1;
-				end
-				
+                end
+			
+                if(b.conjugate)
+                    FLIP = -1;
+                else
+                    FLIP = 1;
+                end
+                
 				if(isCommensurate(a,b))
-% 					fprintf('DEBUG: AOField*AOScreen: commensurate grids.\n');
-					a.grid_ = a.grid_ .* exp((MIRROR*2*pi*1i/a.lambda)*b.grid);
+                    %fprintf('DEBUG: AOField*AOScreen: commensurate grids.\n');
+					a.grid_ = a.grid_ .* exp((FLIP*MIRROR*2*pi*1i/a.lambda)*b.grid);
 				else
 					[X,Y] = a.COORDS;
-% 					fprintf('DEBUG: AOField*AOScreen: non-commensurate grids.\n');
-					bg = exp((MIRROR*2*pi*1i/a.lambda)*interpGrid(b,X,Y));
+ 					%fprintf('DEBUG: AOField*AOScreen: non-commensurate grids.\n');
+					bg = exp((FLIP*MIRROR*2*pi*1i/a.lambda) * b.interpGrid(X,Y));
 					
 					%bg(isnan(bg)) = 1;
 					bg(isnan(bg)) = b.nanmap;
 					a.grid_ = a.grid_ .* bg;
-				end
+                end
+                
 			elseif(isa(b,'AOAtmo'))
 % 				fprintf('DEBUG: AOField*AOAtmo at altitude %f.\n',a.z);
 				% opl = b.OPL(a,a.z);
 				a.grid_ = a.grid_ .* exp((2*pi*1i/a.lambda)*b.OPL(a,a.z));
 			else
 				a = mtimes@AOGrid(a,b);
-			end
+            end
+            
+            a.touch;
         end
         
           function wavenumber = k(this)

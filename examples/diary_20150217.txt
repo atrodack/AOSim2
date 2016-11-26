@@ -1,0 +1,548 @@
+% Define an Aperture.  
+% You can use AOSegment if it is going to just be one piece.  
+% Using AOAperture allows you to build a more complicated pupil out of
+% separately-actuated AOSegments.
+
+A = AOSegment;
+A.name = 'Pupil';
+
+D = 10*0.0254; % 10 inch primary.
+secondary = D/4;
+
+SPACING = D/100;
+aa = SPACING/3; % This is smoothing or "antialiasing".
+% aa = 0.04;
+% spider = 0.0254;
+spider = 0.01;
+
+% This is the rather primative way I define pupils.
+
+% Supported Apodizations: apod_type = pupils(6)
+%
+% 0: Cosine (arg 5 holds the width)
+% 1: Sonine (nu is arg 7)  (beware of definitions!)
+% 2: Elliptical: arg7 is Dy.
+% 3: Angel-Cheng-Woolf
+% 4: Angel2
+% 5: Spergel2D: (arg 5 is gaussian equivalent diameter).
+% 6: Woolf slab: (arg 5 is the height)
+% 7: Specified circular mask. (set shadingMask and shadingRadii
+%     mask) arg 7 is an overall complex phasor.)
+% 8: ellipse: (use AOAperture/addEllipse)
+%
+%
+% "Transmission" types:
+% 0: circular hole
+% 1: mirror
+% -1: wedge
+% -2: spider vanes (3: width, 6: nvanes, 7: starting theta)
+
+PUPIL_DEFN = [
+   0 0 D         1 aa 0 0 0 0 0
+   0 0 secondary 0 aa/2 0 0 0 0 0
+   %0 0 spider   -2 aa 4 0 D/1.9 0 0
+   ];
+
+A.spacing(SPACING);
+A.pupils = PUPIL_DEFN;
+A.make; % This builds the grid from the definitions in A.pupils.
+make: circular COSINE pupil(1)
+make: circular HOLE.
+colormap(gray(256));
+A.show;
+%% Now to make an AOField.
+
+F = AOField(A);  % Use A as the template.
+F.name = 'Field';
+
+% This is pretty small, so make it bigger.
+
+F.resize(256);
+%F.resize(64);
+F.spacing
+
+ans =
+
+    0.0025    0.0025
+
+F.extent
+
+ans =
+
+    0.6502    0.6502
+
+F.FFTSize = 1024;
+
+THld = F.lambda/D * 206265;
+THld
+
+THld =
+
+    1.3432
+
+F.planewave*A;
+subplot(1,2,1);
+F.show;
+[PSF,thx,thy] = F.mkPSF(25*THld,THld/4);
+PSFmax = max(PSF(:));
+
+subplot(1,2,2);
+imagesc(thx,thy,PSF/PSFmax);
+daspect([1 1 1]);
+imagesc(thx,thy,log10(PSF/PSFmax),[-4 0]);
+daspect([1 1 1]);
+colorbar
+clf
+% This is how to load in an image as a pupil map...
+
+img = imread('doubleSlit.png');
+% AOGrid will only use the first plane if it has more dims.
+
+whos img
+  Name       Size              Bytes  Class    Attributes
+
+  img       35x35x3             3675  uint8              
+
+size(img)
+
+ans =
+
+    35    35     3
+
+A.grid(img).show;
+D = max(A.extent)
+
+D =
+
+    0.0889
+
+
+%% Now to make an AOField.
+
+F = AOField(A);  % Use A as the template.
+F.name = 'Field';
+
+% This is pretty small, so make it bigger.
+
+F.resize(256);
+%F.resize(64);
+
+F.lambda = 1e-6;
+F.FFTSize = 1024;
+
+THld = F.lambda/D * 206265;
+
+F.planewave*A;
+
+subplot(1,2,1);
+F.show;
+
+[PSF,thx,thy] = F.mkPSF(25*THld,THld/4);
+PSFmax = max(PSF(:));
+
+subplot(1,2,2);
+imagesc(thx,thy,log10(PSF/PSFmax),[-4 0]);
+daspect([1 1 1]);
+imagesc(thx,thy,(PSF/PSFmax));
+daspect([1 1 1]);
+clf
+PS = AOScreen(2048);
+PS.setR0(0.15);
+PS.make.show;
+Rendering AOScreen .
+for n=1:100
+    % Move the phase screen manually...
+    PS.grid(circshift(PS.grid,[0 1]));
+    
+    F.planewave*PS*A;
+    
+    subplot(1,2,1);
+    F.show;
+    
+    [PSF,thx,thy] = F.mkPSF(10*THld,THld/4);
+    PSFmax = max(PSF(:));
+    
+    subplot(1,2,2);
+    imagesc(thx,thy,PSF/PSFmax);
+    daspect([1 1 1]);
+    
+    drawnow;
+end
+for n=1:100
+    % Move the phase screen manually...
+    PS.grid(circshift(PS.grid,[0 1]));
+    
+    F.planewave*PS*A;
+    
+    subplot(1,2,1);
+    F.show;
+    
+    [PSF,thx,thy] = F.mkPSF(10*THld,THld/4);
+    PSFmax = max(PSF(:));
+    
+    subplot(1,2,2);
+    imagesc(thx,thy,PSF/PSFmax);
+    daspect([1 1 1]);
+    
+    drawnow;
+end
+% Again with weaker turbulence...
+
+PS.setR0(0.5);
+PS.make.show;
+Rendering AOScreen .
+
+clf;
+
+for n=1:100
+    % Move the phase screen manually...
+    PS.grid(circshift(PS.grid,[0 1]));
+    
+    F.planewave*PS*A;
+    
+    subplot(1,2,1);
+    F.show;
+    
+    [PSF,thx,thy] = F.mkPSF(10*THld,THld/4);
+    
+    subplot(1,2,2);
+    imagesc(thx,thy,PSF);
+    daspect([1 1 1]);
+    
+    drawnow;
+end
+PS.r0
+
+ans =
+
+    0.5000
+
+PS.Cn2
+
+ans =
+
+   5.8687e-14
+
+PS.thickness
+
+ans =
+
+     1
+
+PS.setCn2(1e-13)
+AOScreen : 2048x2048 domain:SPACE axis:CENTER 
+PS.r0
+
+ans =
+
+    0.3632
+
+PS.setCn2(1e-12)
+AOScreen : 2048x2048 domain:SPACE axis:CENTER 
+PS.r0
+
+ans =
+
+    0.0912
+
+A.grid(imread('doubleHoles.png')).show;
+clf;
+
+PS.setR0(0.15);
+PS.make;
+Rendering AOScreen .
+
+CCD = 0; % Add a long exposure.
+for n=1:200
+    % Move the phase screen manually...
+    PS.grid(circshift(PS.grid,[1 2]));
+    
+    F.planewave*PS*A;
+    
+    subplot(2,2,1);
+    F.show;
+    
+    [PSF,thx,thy] = F.mkPSF(10*THld,THld/4);
+    CCD = CCD + PSF;
+    
+    subplot(2,2,2);
+    imagesc(thx,thy,PSF/PSFmax);
+    %imagesc(thx,thy,CCD);
+    daspect([1 1 1]);
+    
+    subplot(2,2,4);
+    %imagesc(thx,thy,PSF/PSFmax);
+    imagesc(thx,thy,CCD);
+    daspect([1 1 1]);
+
+    drawnow;
+end
+A = AOSegment;
+A.name = 'Pupil';
+
+D = 10*0.0254; % 10 inch primary.
+secondary = D/4;
+
+SPACING = D/100;
+aa = SPACING/3; % This is smoothing or "antialiasing".
+% aa = 0.04;
+% spider = 0.0254;
+spider = 0.01;
+
+PUPIL_DEFN = [
+   0 0 D         1 aa 0 0 0 0 0
+   0 0 secondary 0 aa/2 0 0 0 0 0
+   %0 0 spider   -2 aa 4 0 D/1.9 0 0
+   ];
+
+A.spacing(SPACING);
+A.pupils = PUPIL_DEFN;
+A.make; % This builds the grid from the definitions in A.pupils.
+make: circular COSINE pupil(1)
+make: circular HOLE.
+A.show;
+
+F = AOField(A);
+F.lambda = 1e-6;
+F.FFTSize = 1024;
+
+THld = F.lambda/D * 206265;
+
+PS.spacing(0.01);
+PS.setR0(0.08);
+PS.make;
+Rendering AOScreen .
+
+CCD = 0; % Add a long exposure.
+for n=1:200
+    % Move the phase screen manually...
+    PS.grid(circshift(PS.grid,[1 2]));
+    
+    F.planewave*PS*A;
+    
+    subplot(2,2,1);
+    F.show;
+    title('pupil field');
+    
+    [PSF,thx,thy] = F.mkPSF(10*THld,THld/4);
+    CCD = CCD + PSF;
+    
+    subplot(2,2,2);
+    imagesc(thx,thy,log10(PSF/max(PSF(:))),[-3 0]);
+    %imagesc(thx,thy,PSF/PSFmax);
+    %imagesc(thx,thy,CCD);
+    daspect([1 1 1]);
+    title('I(t)');
+    
+    subplot(2,2,4);
+    %imagesc(thx,thy,PSF/PSFmax);
+    imagesc(thx,thy,log10(CCD/max(CCD(:))),[-3 0]);
+    daspect([1 1 1]);
+    title('log exposure');
+    
+    drawnow;
+end
+LENS = AOScreen(A);
+LENS.name = 'Lens';
+
+F = AOField(A);
+F.lambda = AOField.VBAND;
+AOField.VBAND
+
+ans =
+
+   5.5560e-07
+
+LENS.zero.addZernike(2,0,-F.lambda/8,D);
+
+[x,y] = F.coords;
+
+F.planewave*A*LENS;
+F.show;
+F.FFTSize = 1024; % Used to compute PSFs, etc.
+THld = F.lambda/D * 206265; % Lambda/D in arcsecs.
+
+% 
+F.planewave*A; % Just go through the pupil.
+[PSF,thx,thy] = F.mkPSF(5,THld/4);
+PSFmax = max(PSF(:)); % Save for normalizing.
+
+PSF = PSF/PSFmax; % make the brightest value =1.
+
+imagesc(thx,thy,log10(PSF),[-4 0]); 
+axis square;
+axis xy;
+colorbar;
+LEclf
+{Undefined function or variable 'LEclf'.
+} 
+clfclf
+{Undefined function or variable 'clfclf'.
+} 
+clf
+for DEFOCUS=-2:.1:2
+    
+    % Set the lens defocus.  Use F.lambda as a reference.
+    LENS.zero.addZernike(2,0,-F.lambda*DEFOCUS,D);
+    
+    F.planewave*A*LENS;
+
+    [PSF,thx,thy] = F.mkPSF(5,THld/4);
+    PSF = PSF/PSFmax; % make the brightest value =1.
+
+    imagesc(thx,thy,log10(PSF),[-4 0]);
+    axis square;
+    axis xy;
+    colorbar;
+    title(sprintf('%.2f lambda',DEFOCUS));
+    
+    drawnow; 
+end
+for DEFOCUS=-2:.02:2
+    
+    % Set the lens defocus.  Use F.lambda as a reference.
+    LENS.zero.addZernike(2,0,-F.lambda*DEFOCUS,D);
+    
+    F.planewave*A*LENS;
+
+    [PSF,thx,thy] = F.mkPSF(5,THld/4);
+    PSF = PSF/PSFmax; % make the brightest value =1.
+
+    imagesc(thx,thy,log10(PSF),[-4 0]);
+    axis square;
+    axis xy;
+    colorbar;
+    title(sprintf('%.2f lambda',DEFOCUS));
+    
+    drawnow; 
+end
+for DEFOCUS=-2:.02:2
+    
+    % Set the lens defocus.  Use F.lambda as a reference.
+    LENS.zero.addZernike(2,0,-F.lambda*DEFOCUS,D);
+    LENS.zero.addZernike(3,3,F.lambda,D);
+    
+    F.planewave*A*LENS;
+
+    [PSF,thx,thy] = F.mkPSF(5,THld/4);
+    PSF = PSF/PSFmax; % make the brightest value =1.
+
+    imagesc(thx,thy,log10(PSF),[-4 0]);
+    axis square;
+    axis xy;
+    colorbar;
+    title(sprintf('%.2f lambda',DEFOCUS));
+    
+    drawnow; 
+end
+{Operation terminated by user during matlab.graphics.illustration.ColorBar/get.AxesListenerList
+
+
+In matlab.graphics.illustration.ColorBar/attachAxesListeners (line 16)
+
+
+
+In matlab.graphics.illustration.ColorBar/setAxesImpl (line 4595)
+
+
+
+In matlab.graphics.illustration.ColorBar/set.Axes_I (line 1328)
+
+
+
+In matlab.graphics.illustration.ColorBar/set.Axes (line 1275)
+
+
+
+In colorbarHGUsingMATLABClasses (line 185)
+
+
+
+In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('colorbar', '/usr/local/MATLAB/R2014b/toolbox/matlab/scribe/colorbar.m', 50)" style="font-weight:bold">colorbar</a> (<a href="matlab: opentoline('/usr/local/MATLAB/R2014b/toolbox/matlab/scribe/colorbar.m',50,0)">line 50</a>)
+            colorbarHGUsingMATLABClasses(varargin{:});
+} 
+for DEFOCUS=-2:.05:2
+    
+    % Set the lens defocus.  Use F.lambda as a reference.
+    LENS.zero.addZernike(2,0,-F.lambda*DEFOCUS,D);
+    LENS.addZernike(3,3,F.lambda,D);
+    
+    F.planewave*A*LENS;
+
+    [PSF,thx,thy] = F.mkPSF(5,THld/4);
+    PSF = PSF/PSFmax; % make the brightest value =1.
+
+    imagesc(thx,thy,log10(PSF),[-4 0]);
+    axis square;
+    axis xy;
+    colorbar;
+    title(sprintf('%.2f lambda',DEFOCUS));
+    
+    drawnow; 
+end
+F.planewave*PS*A
+AOField copy of Pupil: 101x101 domain:SPACE axis:CENTER 
+F.show
+F.size
+
+ans =
+
+   101   101
+
+F.resize(256)
+
+ans =
+
+   256   256
+
+F.planewave*PS*A
+AOField copy of Pupil: 256x256 domain:SPACE axis:CENTER 
+F.show
+plotComplex(F.grid,2)
+plotComplex(F.grid,2);axis xy
+[x,y] = F.coords;
+plotComplex(F.grid,2);axis xy;axis off;
+plotComplex(F.grid .* circshift(F.grid,[0 10])   ,2);axis xy;axis off;
+plotComplex(abs(F.grid + circshift(F.grid,[0 10])).^2   ,2);axis xy;axis off;
+imagesc(abs(F.grid + circshift(F.grid,[0 10])).^2);axis xy;axis off;
+imagesc(abs(F.grid + circshift(F.grid,[0 10])).^2);daspect([1 1 1]);axis xy;axis off;
+imagesc(abs(F.grid + 1i*circshift(F.grid,[0 10])).^2);daspect([1 1 1]);axis xy;axis off;
+imagesc(abs(F.grid + 0*circshift(F.grid,[0 10])).^2);daspect([1 1 1]);axis xy;axis off;
+imagesc(abs(F.grid + .5*circshift(F.grid,[0 10])).^2);daspect([1 1 1]);axis xy;axis off;
+[X,Y] = F.COORDS;
+g = F.grid;
+plotComplex(g,2)
+plotComplex(g,2);axis xy;
+plotComplex(g.*exp(1i*X),2);axis xy;
+plotComplex(g.*exp(1i*X*10),2);axis xy;
+plotComplex(g.*exp(1i*X*100),2);axis xy;
+plotComplex(g.*exp(1i*X*200),2);axis xy;
+plotComplex(g.*exp(1i*X*200)+circshift(g,[10 0]),2);axis xy;
+plotComplex(g.*exp(1i*X*200)+circshift(g,[0 10]),2);axis xy;
+imagesc(abs(g.*exp(1i*X*200)+circshift(g,[0 10])).^2 );axis xy;
+imagesc(abs(g.*exp(1i*X*200)+circshift(g,[0 10])).^2 );daspect([1 1 1]);axis xy;
+for n=1:200
+PS.grid(circshift(PS.grid,[1 2]));
+F.planewave*PS*A;
+g = F.grid;
+imagesc(abs(g.*exp(1i*X*200)+circshift(g,[0 10])).^2 );daspect([1 1 1]);axis xy;drawnow;
+end
+help diary
+ <strong>diary</strong> Save text of MATLAB session.
+    <strong>diary</strong> FILENAME causes a copy of all subsequent command window input
+    and most of the resulting command window output to be appended to the
+    named file.  If no file is specified, the file 'diary' is used.
+ 
+    <strong>diary</strong> OFF suspends it. 
+    <strong>diary</strong> ON turns it back on.
+    <strong>diary</strong>, by itself, toggles the diary state.
+ 
+    Use the functional form of <strong>diary</strong>, such as <strong>diary</strong>('file'),
+    when the file name is stored in a string.
+ 
+    See also <a href="matlab:help save">save</a>.
+
+    Reference page in Help browser
+       <a href="matlab:doc diary">doc diary</a>
+
+diary OFF

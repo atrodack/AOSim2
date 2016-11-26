@@ -83,9 +83,13 @@ classdef AOReconstructor < handle
 				end
 			else
 				RECON.D = D;
-			end
+            end
 			
-			RECON.A.trueUp;
+            if(isa(RECON.A,'AOAperture'))
+                % If there are segments, put them into their default
+                % positions before testing.
+    			RECON.A.trueUp;
+            end
 			RECON.WFS.initBias(RECON.A);
 			
 			dk = 2*pi/RECON.D * RECON.step;
@@ -190,7 +194,11 @@ classdef AOReconstructor < handle
 			RECON.OWD = Nmax;
 			RECON.D = D;
 			
-			RECON.A.trueUp; 
+            if(isa(RECON.A,'AOAperture'))
+                % If there are segments, put them into their default
+                % positions before testing.
+    			RECON.A.trueUp;
+            end
 			RECON.WFS.initBias(RECON.A);
 			
 			NZmodes = (Nmax+1)*(Nmax+2)/2;
@@ -544,10 +552,10 @@ classdef AOReconstructor < handle
 			RECON.rebuild;
 		end
         
-        % This tries to improve a reconstructor.  It doesn't matter how you
-        % got the first one.
         function RECON = postProcess(RECON,D,Nmax,lambda)
-			% RECON = zprogram(RECON,D,Nmax,lambda)
+            % RECON = zprogram(RECON,D,Nmax,lambda)
+            % This tries to improve a reconstructor.  It doesn't matter how you
+            % got the first one.
 			
 			if(nargin<5)
 				if(isempty(RECON.lambda))
@@ -564,7 +572,11 @@ classdef AOReconstructor < handle
 			RECON.OWD = Nmax;
 			RECON.D = D;
 			
-			RECON.A.trueUp; 
+            if(isa(RECON.A,'AOAperture'))
+                % If there are segments, put them into their default
+                % positions before testing.
+    			RECON.A.trueUp;
+            end
 			RECON.WFS.initBias(RECON.A);
 			
 			NZmodes = (Nmax+1)*(Nmax+2)/2;
@@ -831,6 +843,7 @@ classdef AOReconstructor < handle
             imagesc(this.RECONSTRUCTOR);
             ylabel('actuators');
             xlabel('slopes');
+            axis ij;
             drawnow;
         end
         
